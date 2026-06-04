@@ -1,16 +1,16 @@
 {
   "manifest_version": 3,
   "name": "ZeroTrust Bouncer POC",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "POC for AI Privacy Masking on ChatGPT",
   "content_scripts": [
     {
-      "matches": ["*://chatgpt.com/*", "*://gemini.google.com/*"],
+      "matches": ["*://chatgpt.com/*", "*://gemini.google.com/*", "*://claude.ai/*"],
       "js": ["content.js"],
       "run_at": "document_start"
     },
     {
-      "matches": ["*://chatgpt.com/*", "*://gemini.google.com/*"],
+      "matches": ["*://chatgpt.com/*", "*://gemini.google.com/*", "*://claude.ai/*"],
       "js": ["inject.js"],
       "run_at": "document_start",
       "world": "MAIN"
