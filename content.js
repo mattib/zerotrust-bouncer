@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC v0.2.2: content.js loaded");
+console.log("ZeroTrust Bouncer POC v0.2.3: content.js loaded");
 
 // Removed manual injection, handled by MV3 MAIN world
 
@@ -9,10 +9,10 @@ let piiMap = {};
 window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     try {
         piiMap = JSON.parse(e.detail);
-        console.log("ZeroTrust Bouncer v0.2.2: Received updated PII map!", piiMap);
+        console.log("ZeroTrust Bouncer v0.2.3: Received updated PII map!", piiMap);
         unmaskNode(document.body);
     } catch (err) {
-        console.error("ZeroTrust Bouncer v0.2.2: Error parsing map", err);
+        console.error("ZeroTrust Bouncer v0.2.3: Error parsing map", err);
     }
 });
 
@@ -27,7 +27,7 @@ function unmaskNode(node) {
             if (text.includes(token)) {
                 text = text.replaceAll(token, realValue);
                 modified = true;
-                console.log(`ZeroTrust Bouncer v0.2.2: Unmasked ${token} on screen!`);
+                console.log(`ZeroTrust Bouncer v0.2.3: Unmasked ${token} on screen!`);
             }
         }
         
@@ -35,10 +35,24 @@ function unmaskNode(node) {
             node.nodeValue = text;
         }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
+        // Pierce Shadow DOM
+        if (node.shadowRoot) {
+            if (!node.shadowRoot.__ztbObserved) {
+                try {
+                    observer.observe(node.shadowRoot, { childList: true, characterData: true, subtree: true });
+                    node.shadowRoot.__ztbObserved = true;
+                } catch(e) {}
+            }
+            unmaskNode(node.shadowRoot);
+        }
         if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
             for (let child of node.childNodes) {
                 unmaskNode(child);
             }
+        }
+    } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        for (let child of node.childNodes) {
+            unmaskNode(child);
         }
     }
 }
@@ -57,7 +71,7 @@ const observer = new MutationObserver((mutations) => {
                 if (text.includes(token)) {
                     text = text.replaceAll(token, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.2.2: Unmasked ${token} on screen (text mutation)!`);
+                    console.log(`ZeroTrust Bouncer v0.2.3: Unmasked ${token} on screen (text mutation)!`);
                 }
             }
             
