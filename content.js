@@ -27,7 +27,14 @@ function unmaskNode(node) {
             if (text.includes(token)) {
                 text = text.replaceAll(token, realValue);
                 modified = true;
-                console.log(`ZeroTrust Bouncer v0.2.6: Unmasked ${token} on screen!`);
+                console.log(`ZeroTrust Bouncer v0.2.9: Unmasked ${token} on screen!`);
+            } else {
+                const bareToken = token.slice(1, -1);
+                if (text.includes(bareToken)) {
+                    text = text.replaceAll(bareToken, realValue);
+                    modified = true;
+                    console.log(`ZeroTrust Bouncer v0.2.9: Unmasked bare ${bareToken} on screen!`);
+                }
             }
         }
         
@@ -71,7 +78,14 @@ const observer = new MutationObserver((mutations) => {
                 if (text.includes(token)) {
                     text = text.replaceAll(token, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.2.6: Unmasked ${token} on screen (text mutation)!`);
+                    console.log(`ZeroTrust Bouncer v0.2.9: Unmasked ${token} on screen (text mutation)!`);
+                } else {
+                    const bareToken = token.slice(1, -1);
+                    if (text.includes(bareToken)) {
+                        text = text.replaceAll(bareToken, realValue);
+                        modified = true;
+                        console.log(`ZeroTrust Bouncer v0.2.9: Unmasked bare ${bareToken} on screen (text mutation)!`);
+                    }
                 }
             }
             
