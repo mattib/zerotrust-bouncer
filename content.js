@@ -250,6 +250,14 @@ function injectFloatingWidget(initialSettings) {
         viewMain.style.display = 'block';
     });
 
+    panel.querySelector('#btn-issue').addEventListener('click', () => {
+        window.open('mailto:mattiba@gmail.com?subject=ZeroTrust%20Bouncer%20Feedback');
+    });
+
+    panel.querySelector('#btn-info').addEventListener('click', () => {
+        window.open('https://github.com/mattib/zerotrust-bouncer-poc', '_blank');
+    });
+
     // Toggle Listeners
     const toggleIds = ['provider_chatgpt', 'provider_claude', 'provider_gemini', 'pii_email', 'pii_phone', 'pii_id'];
     toggleIds.forEach(id => {
