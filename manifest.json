@@ -13,7 +13,7 @@
   "web_accessible_resources": [
     {
       "resources": ["inject.js"],
-      "matches": ["*://chatgpt.com/*"]
+      "matches": ["*://chatgpt.com/*", "*://gemini.google.com/*"]
     }
   ]
 }
