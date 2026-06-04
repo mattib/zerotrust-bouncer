@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC v0.2.5: content.js loaded");
+console.log("ZeroTrust Bouncer POC v0.2.6: content.js loaded");
 
 // Removed manual injection, handled by MV3 MAIN world
 
@@ -9,10 +9,10 @@ let piiMap = {};
 window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     try {
         piiMap = JSON.parse(e.detail);
-        console.log("ZeroTrust Bouncer v0.2.5: Received updated PII map!", piiMap);
+        console.log("ZeroTrust Bouncer v0.2.6: Received updated PII map!", piiMap);
         unmaskNode(document.body);
     } catch (err) {
-        console.error("ZeroTrust Bouncer v0.2.5: Error parsing map", err);
+        console.error("ZeroTrust Bouncer v0.2.6: Error parsing map", err);
     }
 });
 
@@ -27,7 +27,7 @@ function unmaskNode(node) {
             if (text.includes(token)) {
                 text = text.replaceAll(token, realValue);
                 modified = true;
-                console.log(`ZeroTrust Bouncer v0.2.5: Unmasked ${token} on screen!`);
+                console.log(`ZeroTrust Bouncer v0.2.6: Unmasked ${token} on screen!`);
             }
         }
         
@@ -71,7 +71,7 @@ const observer = new MutationObserver((mutations) => {
                 if (text.includes(token)) {
                     text = text.replaceAll(token, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.2.5: Unmasked ${token} on screen (text mutation)!`);
+                    console.log(`ZeroTrust Bouncer v0.2.6: Unmasked ${token} on screen (text mutation)!`);
                 }
             }
             
