@@ -1,5 +1,5 @@
 window.ZeroTrust = window.ZeroTrust || {
-    logPrefix: "[ZeroTrust Bouncer POC]", // Default fallback
+    logPrefix: "[ZeroTrust Bouncer]", // Default fallback
     log: function(...args) {
         console.log(window.ZeroTrust.logPrefix, ...args);
     },

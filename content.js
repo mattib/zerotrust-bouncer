@@ -255,7 +255,7 @@ function injectFloatingWidget(initialSettings) {
     });
 
     panel.querySelector('#btn-info').addEventListener('click', () => {
-        window.open('https://github.com/mattib/zerotrust-bouncer-poc', '_blank');
+        window.open('https://github.com/mattib/zerotrust-bouncer', '_blank');
     });
 
     // Toggle Listeners

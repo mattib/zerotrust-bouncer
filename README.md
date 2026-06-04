@@ -22,7 +22,7 @@ ZeroTrust Bouncer has no backend, no telemetry, and no tracking. Everything happ
 
 ---
 
-## עברית (Hebrew)
+## שומר סף לפרטיות (ZeroTrust Bouncer)
 
 תוסף פרטיות "אפס-אמון" שרץ לחלוטין בתוך הדפדפן שלך. הוא מיירט ומסווה מידע מזהה אישי (PII) עוד לפני שהוא מגיע לרשת, ומונע מספקיות AI (כמו ChatGPT, Claude, Gemini) לקבל את המידע הרגיש שלך.
 
