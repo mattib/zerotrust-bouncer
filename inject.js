@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC v0.1.3: inject.js loaded (Main World)");
+console.log("ZeroTrust Bouncer POC v0.1.4: inject.js loaded (Main World)");
 
 const originalFetch = window.fetch;
 window.fetch = async function(...args) {
@@ -13,26 +13,43 @@ window.fetch = async function(...args) {
         }
     } catch (e) {}
 
-    const options = args[1];
-
     if (urlString.includes('conversation')) {
-        console.log("ZeroTrust Bouncer v0.1.3: Intercepted FETCH conversation request!");
+        console.log("ZeroTrust Bouncer v0.1.4: Intercepted FETCH conversation request!");
         try {
-            let bodyData = null;
-            if (options && options.body) {
-                bodyData = options.body;
-            } else if (args[0] instanceof Request) {
-                console.log("ZeroTrust Bouncer v0.1.3: Payload is inside Request object");
+            let bodyText = null;
+            let isRequestObj = false;
+
+            if (args[0] instanceof Request) {
+                isRequestObj = true;
+                // Clone the request so we can read the body without consuming the original stream
+                bodyText = await args[0].clone().text();
+            } else if (args[1] && typeof args[1].body === 'string') {
+                bodyText = args[1].body;
             }
 
-            if (typeof bodyData === 'string') {
-                console.log("ZeroTrust Bouncer v0.1.3: Fetch Payload:", JSON.parse(bodyData));
+            if (bodyText) {
+                console.log("ZeroTrust Bouncer v0.1.4: Original Payload Extracted!");
+                
+                // MASKING ENGINE LOGIC
+                if (bodyText.includes("test@test.com")) {
+                    console.log("ZeroTrust Bouncer v0.1.4: PII DETECTED (test@test.com)! Masking...");
+                    const maskedText = bodyText.replace(/test@test\.com/g, "[EMAIL_1]");
+                    
+                    if (isRequestObj) {
+                        // Create a brand new Request object with the masked body
+                        args[0] = new Request(args[0], { body: maskedText });
+                    } else {
+                        // Modify the options object directly
+                        args[1].body = maskedText;
+                    }
+                    console.log("ZeroTrust Bouncer v0.1.4: Payload Masked Successfully! Forwarding to OpenAI...");
+                }
             }
         } catch(e) {
-            console.error("ZeroTrust Bouncer v0.1.3: Error parsing payload", e);
+            console.error("ZeroTrust Bouncer v0.1.4: Error during masking", e);
         }
     }
     
-    // Use Reflect.apply for maximum safety
+    // Pass the (potentially modified) request to the native fetch
     return Reflect.apply(originalFetch, window, args);
 };
