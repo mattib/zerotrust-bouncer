@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC v0.1.6: inject.js loaded (Main World)");
+console.log("ZeroTrust Bouncer POC v0.1.7: inject.js loaded (Main World)");
 
 const PII_REGEXES = [
     { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
@@ -35,6 +35,23 @@ function maskText(text) {
     return newText;
 }
 
+// Intercept programmatic copy to unmask before it hits clipboard
+if (navigator.clipboard && navigator.clipboard.writeText) {
+    const originalWriteText = navigator.clipboard.writeText;
+    navigator.clipboard.writeText = async function(text) {
+        let unmaskedText = text;
+        if (typeof unmaskedText === 'string') {
+            for (const [token, realValue] of Object.entries(piiMap)) {
+                if (unmaskedText.includes(token)) {
+                    unmaskedText = unmaskedText.replaceAll(token, realValue);
+                }
+            }
+        }
+        console.log("ZeroTrust Bouncer v0.1.7: Unmasked text for clipboard copy!");
+        return Reflect.apply(originalWriteText, navigator.clipboard, [unmaskedText]);
+    };
+}
+
 const originalFetch = window.fetch;
 window.fetch = async function(...args) {
     let urlString = "";
@@ -49,7 +66,7 @@ window.fetch = async function(...args) {
     } catch (e) {}
 
     if (urlString.includes('conversation')) {
-        console.log("ZeroTrust Bouncer v0.1.6: Intercepted FETCH conversation request!");
+        console.log("ZeroTrust Bouncer v0.1.7: Intercepted FETCH conversation request!");
         try {
             let bodyText = null;
             let isRequestObj = false;
@@ -65,17 +82,17 @@ window.fetch = async function(...args) {
                 const maskedText = maskText(bodyText);
                 
                 if (maskedText !== bodyText) {
-                    console.log("ZeroTrust Bouncer v0.1.6: PII DETECTED! Masking payload...");
+                    console.log("ZeroTrust Bouncer v0.1.7: PII DETECTED! Masking payload...");
                     if (isRequestObj) {
                         args[0] = new Request(args[0], { body: maskedText });
                     } else {
                         args[1].body = maskedText;
                     }
-                    console.log("ZeroTrust Bouncer v0.1.6: Payload Masked Successfully! Forwarding to OpenAI...");
+                    console.log("ZeroTrust Bouncer v0.1.7: Payload Masked Successfully! Forwarding to OpenAI...");
                 }
             }
         } catch(e) {
-            console.error("ZeroTrust Bouncer v0.1.6: Error during masking", e);
+            console.error("ZeroTrust Bouncer v0.1.7: Error during masking", e);
         }
     }
     

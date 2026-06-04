@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC v0.1.6: content.js loaded");
+console.log("ZeroTrust Bouncer POC v0.1.7: content.js loaded");
 
 // Inject the fetch interceptor
 const script = document.createElement('script');
@@ -15,10 +15,10 @@ let piiMap = {};
 window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     try {
         piiMap = JSON.parse(e.detail);
-        console.log("ZeroTrust Bouncer v0.1.6: Received updated PII map!", piiMap);
+        console.log("ZeroTrust Bouncer v0.1.7: Received updated PII map!", piiMap);
         unmaskNode(document.body);
     } catch (err) {
-        console.error("ZeroTrust Bouncer v0.1.6: Error parsing map", err);
+        console.error("ZeroTrust Bouncer v0.1.7: Error parsing map", err);
     }
 });
 
@@ -33,7 +33,7 @@ function unmaskNode(node) {
             if (text.includes(token)) {
                 text = text.replaceAll(token, realValue);
                 modified = true;
-                console.log(`ZeroTrust Bouncer v0.1.6: Unmasked ${token} on screen!`);
+                console.log(`ZeroTrust Bouncer v0.1.7: Unmasked ${token} on screen!`);
             }
         }
         
@@ -63,7 +63,7 @@ const observer = new MutationObserver((mutations) => {
                 if (text.includes(token)) {
                     text = text.replaceAll(token, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.1.6: Unmasked ${token} on screen (text mutation)!`);
+                    console.log(`ZeroTrust Bouncer v0.1.7: Unmasked ${token} on screen (text mutation)!`);
                 }
             }
             
