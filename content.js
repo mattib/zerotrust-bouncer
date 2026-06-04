@@ -4,10 +4,35 @@ const ztLog = (...args) => console.log(ztPrefix, ...args);
 
 ztLog("Engine Started. Built by Matti B.");
 
-// Send prefix to MAIN world scripts
 window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_InitLogger', { 
     detail: JSON.stringify({ prefix: ztPrefix }) 
 }));
+
+const defaultSettings = {
+    pii_email: true, pii_phone: true, pii_id: true,
+    provider_chatgpt: true, provider_claude: true, provider_gemini: true
+};
+
+chrome.storage.local.get(defaultSettings, (settings) => {
+    // Send initial config to core engine
+    window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
+        detail: JSON.stringify(settings)
+    }));
+    injectFloatingWidget(settings);
+});
+
+// Listen for live changes in other tabs or the UI
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local') {
+        const updates = {};
+        for (let [key, { newValue }] of Object.entries(changes)) {
+            updates[key] = newValue;
+        }
+        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
+            detail: JSON.stringify(updates)
+        }));
+    }
+});
 
 let piiMap = {};
 
@@ -108,13 +133,12 @@ const startObserver = () => {
             subtree: true
         });
         unmaskNode(document.body);
-        injectFloatingWidget();
     } else {
         setTimeout(startObserver, 50);
     }
 };
 
-function injectFloatingWidget() {
+function injectFloatingWidget(initialSettings) {
     if (document.getElementById('zerotrust-bouncer-widget-container')) return;
 
     const container = document.createElement('div');
@@ -137,13 +161,29 @@ function injectFloatingWidget() {
         .shield-icon { width: 22px; height: 22px; fill: white; }
         .panel { position: absolute; top: 54px; right: 0; width: 220px; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); border: 1px solid #e5e7eb; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
         .widget-wrapper:hover .panel { opacity: 1; visibility: visible; transform: translateY(0); }
-        .panel-header { background: #f9fafb; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+        .panel-header { background: #f9fafb; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; }
         .panel-title { margin: 0; font-size: 14px; font-weight: 600; color: #111827; }
         .panel-version { margin: 0; font-size: 12px; color: #6b7280; margin-top: 2px; }
         .panel-body { padding: 8px; }
         .panel-btn { display: block; width: 100%; text-align: left; padding: 10px 12px; margin: 2px 0; background: none; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
         .panel-btn:hover { background: #f3f4f6; color: #111827; }
         .panel-btn svg { width: 16px; height: 16px; margin-right: 10px; vertical-align: text-bottom; fill: currentColor; opacity: 0.7; }
+        
+        /* Toggle Switch CSS */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 2px; }
+        .toggle-label { font-size: 13px; font-weight: 500; color: #374151; }
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(14px); }
+        .section-title { font-size: 11px; text-transform: uppercase; color: #9ca3af; margin: 12px 12px 4px 12px; letter-spacing: 0.5px; font-weight: 600;}
+        
+        #view-options { display: none; }
+        .btn-back { background: none; border: none; cursor: pointer; padding: 0; margin-right: 8px; display: flex; align-items: center; color: #6b7280; }
+        .btn-back:hover { color: #111827; }
+        .btn-back svg { width: 18px; height: 18px; fill: currentColor; }
     `;
 
     const wrapper = document.createElement('div');
@@ -156,15 +196,35 @@ function injectFloatingWidget() {
     const panel = document.createElement('div');
     panel.className = 'panel';
     const m = chrome.runtime.getManifest();
+    
     panel.innerHTML = `
-        <div class="panel-header">
-            <h3 class="panel-title">${m.name}</h3>
-            <p class="panel-version">v${m.version}</p>
+        <div id="view-main">
+            <div class="panel-header" style="flex-direction: column; align-items: flex-start;">
+                <h3 class="panel-title">${m.name}</h3>
+                <p class="panel-version">v${m.version}</p>
+            </div>
+            <div class="panel-body">
+                <button class="panel-btn" id="btn-info"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>More Info</button>
+                <button class="panel-btn" id="btn-issue"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Report Issue</button>
+                <button class="panel-btn" id="btn-options"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>Options</button>
+            </div>
         </div>
-        <div class="panel-body">
-            <button class="panel-btn"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>More Info</button>
-            <button class="panel-btn"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Report Issue</button>
-            <button class="panel-btn"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>Options</button>
+        <div id="view-options">
+            <div class="panel-header">
+                <button class="btn-back" id="btn-back"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <h3 class="panel-title">Settings</h3>
+            </div>
+            <div class="panel-body" style="padding: 0 0 8px 0;">
+                <div class="section-title">Providers</div>
+                <div class="toggle-row"><span class="toggle-label">ChatGPT</span><label class="switch"><input type="checkbox" id="tgl-provider_chatgpt" ${initialSettings.provider_chatgpt ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Claude</span><label class="switch"><input type="checkbox" id="tgl-provider_claude" ${initialSettings.provider_claude ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Gemini</span><label class="switch"><input type="checkbox" id="tgl-provider_gemini" ${initialSettings.provider_gemini ? 'checked' : ''}><span class="slider"></span></label></div>
+                
+                <div class="section-title">PII Types</div>
+                <div class="toggle-row"><span class="toggle-label">Emails</span><label class="switch"><input type="checkbox" id="tgl-pii_email" ${initialSettings.pii_email ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Phone Numbers</span><label class="switch"><input type="checkbox" id="tgl-pii_phone" ${initialSettings.pii_phone ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">ID Numbers</span><label class="switch"><input type="checkbox" id="tgl-pii_id" ${initialSettings.pii_id ? 'checked' : ''}><span class="slider"></span></label></div>
+            </div>
         </div>
     `;
 
@@ -173,6 +233,30 @@ function injectFloatingWidget() {
     shadow.appendChild(style);
     shadow.appendChild(wrapper);
     document.body.appendChild(container);
+
+    // Navigation Listeners
+    const viewMain = shadow.getElementById('view-main');
+    const viewOptions = shadow.getElementById('view-options');
+    
+    shadow.getElementById('btn-options').addEventListener('click', () => {
+        viewMain.style.display = 'none';
+        viewOptions.style.display = 'block';
+    });
+    
+    shadow.getElementById('btn-back').addEventListener('click', () => {
+        viewOptions.style.display = 'none';
+        viewMain.style.display = 'block';
+    });
+
+    // Toggle Listeners
+    const toggleIds = ['provider_chatgpt', 'provider_claude', 'provider_gemini', 'pii_email', 'pii_phone', 'pii_id'];
+    toggleIds.forEach(id => {
+        shadow.getElementById('tgl-' + id).addEventListener('change', (e) => {
+            const update = {};
+            update[id] = e.target.checked;
+            chrome.storage.local.set(update);
+        });
+    });
 }
 
 startObserver();

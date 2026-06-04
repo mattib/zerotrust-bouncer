@@ -4,6 +4,15 @@ window.ZeroTrust = window.ZeroTrust || {
         console.log(window.ZeroTrust.logPrefix, ...args);
     },
     
+    config: {
+        pii_email: true,
+        pii_phone: true,
+        pii_id: true,
+        provider_chatgpt: true,
+        provider_claude: true,
+        provider_gemini: true
+    },
+    
     PII_REGEXES: [
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
         { type: "PHONE", regex: /(?:05\d-?\d{7})|(?:\+972-?5\d-?\d{7})/g },
@@ -18,6 +27,9 @@ window.ZeroTrust = window.ZeroTrust || {
         let modified = false;
 
         for (const rule of window.ZeroTrust.PII_REGEXES) {
+            const configKey = `pii_${rule.type.toLowerCase()}`;
+            if (window.ZeroTrust.config[configKey] === false) continue; // Skip disabled PII types
+
             newText = newText.replace(rule.regex, (match) => {
                 let existingToken = Object.keys(window.ZeroTrust.piiMap).find(key => window.ZeroTrust.piiMap[key] === match);
                 if (existingToken) return existingToken;
@@ -50,13 +62,21 @@ window.ZeroTrust = window.ZeroTrust || {
     }
 };
 
-// Listen for the logger init event from content.js
 window.addEventListener('ZeroTrustBouncer_InitLogger', (e) => {
     try {
         const data = JSON.parse(e.detail);
         if (data.prefix) {
             window.ZeroTrust.logPrefix = data.prefix;
         }
+    } catch (err) {}
+});
+
+// Listen for live config updates from the options UI
+window.addEventListener('ZeroTrustBouncer_ConfigUpdate', (e) => {
+    try {
+        const updates = JSON.parse(e.detail);
+        Object.assign(window.ZeroTrust.config, updates);
+        window.ZeroTrust.log("Engine Config Updated:", window.ZeroTrust.config);
     } catch (err) {}
 });
 

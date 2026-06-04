@@ -14,6 +14,11 @@ window.fetch = async function(...args) {
     const provider = window.ZeroTrust.providers.find(p => p.shouldIntercept(urlString));
 
     if (provider) {
+        const configKey = `provider_${provider.name.toLowerCase()}`;
+        if (window.ZeroTrust.config[configKey] === false) {
+            return Reflect.apply(originalFetch, window, args);
+        }
+
         window.ZeroTrust.log(`Intercepted FETCH request for ${provider.name} -> ${urlString}`);
         try {
             let bodyText = null;
@@ -59,7 +64,13 @@ XMLHttpRequest.prototype.send = function(body) {
         if (typeof body === 'string' && this._url) {
             let urlString = String(this._url);
             const provider = window.ZeroTrust.providers.find(p => p.shouldIntercept(urlString));
+            
             if (provider) {
+                const configKey = `provider_${provider.name.toLowerCase()}`;
+                if (window.ZeroTrust.config[configKey] === false) {
+                    return Reflect.apply(originalXHRSend, this, [body]);
+                }
+
                 window.ZeroTrust.log(`Intercepted XHR request for ${provider.name} -> ${urlString}`);
                 const maskedText = provider.processPayload(body);
                 if (maskedText !== body) {
