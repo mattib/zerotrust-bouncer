@@ -1,43 +1,38 @@
-console.log("ZeroTrust Bouncer POC v0.1.2: inject.js loaded (Main World)");
+console.log("ZeroTrust Bouncer POC v0.1.3: inject.js loaded (Main World)");
 
-// 1. Fetch Interceptor
 const originalFetch = window.fetch;
-window.fetch = function(...args) {
+window.fetch = async function(...args) {
+    let urlString = "";
     try {
-        const url = args[0] instanceof Request ? args[0].url : args[0];
-        if (typeof url === 'string' && url.includes('/backend-api/conversation')) {
-            console.log("ZeroTrust Bouncer v0.1.2: Intercepted FETCH conversation request!");
-            if (args[1] && typeof args[1].body === 'string') {
-                console.log("Fetch Payload:", JSON.parse(args[1].body));
-            }
+        if (args[0] instanceof Request) {
+            urlString = args[0].url;
+        } else if (args[0] instanceof URL) {
+            urlString = args[0].href;
+        } else {
+            urlString = String(args[0]);
         }
-    } catch(e) {}
-    
-    // Pass to native fetch, ensuring window context
-    return originalFetch.apply(window, args);
-};
+    } catch (e) {}
 
-// 2. WebSocket Interceptor
-const OriginalWebSocket = window.WebSocket;
-window.WebSocket = function(url, protocols) {
-    const ws = new OriginalWebSocket(url, protocols);
-    
-    const originalSend = ws.send;
-    ws.send = function(data) {
+    const options = args[1];
+
+    if (urlString.includes('conversation')) {
+        console.log("ZeroTrust Bouncer v0.1.3: Intercepted FETCH conversation request!");
         try {
-            if (typeof url === 'string' && url.includes('chatgpt.com')) {
-                console.log("ZeroTrust Bouncer v0.1.2: Intercepted WEBSOCKET send!");
-                if (typeof data === 'string') {
-                    console.log("WS Payload (string):", JSON.parse(data));
-                } else {
-                    console.log("WS Payload (binary):", data);
-                }
+            let bodyData = null;
+            if (options && options.body) {
+                bodyData = options.body;
+            } else if (args[0] instanceof Request) {
+                console.log("ZeroTrust Bouncer v0.1.3: Payload is inside Request object");
             }
-        } catch(e) {}
-        
-        return originalSend.apply(this, arguments);
-    };
+
+            if (typeof bodyData === 'string') {
+                console.log("ZeroTrust Bouncer v0.1.3: Fetch Payload:", JSON.parse(bodyData));
+            }
+        } catch(e) {
+            console.error("ZeroTrust Bouncer v0.1.3: Error parsing payload", e);
+        }
+    }
     
-    return ws;
+    // Use Reflect.apply for maximum safety
+    return Reflect.apply(originalFetch, window, args);
 };
-window.WebSocket.prototype = OriginalWebSocket.prototype;
