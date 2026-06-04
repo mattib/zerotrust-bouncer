@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ZeroTrust Bouncer POC",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "POC for AI Privacy Masking on ChatGPT",
   "content_scripts": [
     {
