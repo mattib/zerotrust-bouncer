@@ -235,15 +235,17 @@ function injectFloatingWidget(initialSettings) {
     document.body.appendChild(container);
 
     // Navigation Listeners
-    const viewMain = shadow.getElementById('view-main');
-    const viewOptions = shadow.getElementById('view-options');
+    const viewMain = panel.querySelector('#view-main');
+    const viewOptions = panel.querySelector('#view-options');
     
-    shadow.getElementById('btn-options').addEventListener('click', () => {
+    panel.querySelector('#btn-options').addEventListener('click', (e) => {
+        console.log("[ZeroTrust] Options clicked");
         viewMain.style.display = 'none';
         viewOptions.style.display = 'block';
     });
     
-    shadow.getElementById('btn-back').addEventListener('click', () => {
+    panel.querySelector('#btn-back').addEventListener('click', (e) => {
+        console.log("[ZeroTrust] Back clicked");
         viewOptions.style.display = 'none';
         viewMain.style.display = 'block';
     });
@@ -251,11 +253,15 @@ function injectFloatingWidget(initialSettings) {
     // Toggle Listeners
     const toggleIds = ['provider_chatgpt', 'provider_claude', 'provider_gemini', 'pii_email', 'pii_phone', 'pii_id'];
     toggleIds.forEach(id => {
-        shadow.getElementById('tgl-' + id).addEventListener('change', (e) => {
-            const update = {};
-            update[id] = e.target.checked;
-            chrome.storage.local.set(update);
-        });
+        const tgl = panel.querySelector('#tgl-' + id);
+        if (tgl) {
+            tgl.addEventListener('change', (e) => {
+                const update = {};
+                update[id] = e.target.checked;
+                chrome.storage.local.set(update);
+                console.log(`[ZeroTrust] Toggled ${id}: ${e.target.checked}`);
+            });
+        }
     });
 }
 
