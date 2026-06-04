@@ -263,6 +263,52 @@ function injectFloatingWidget(initialSettings) {
             });
         }
     });
+
+    // Dragging Logic
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+
+    button.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // Only left click
+        
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        const rect = container.getBoundingClientRect();
+        
+        // Convert fixed 'right' positioning to 'left' so dragging logic is strictly localized
+        if (!container.style.left || container.style.left === 'auto') {
+            container.style.left = rect.left + 'px';
+            container.style.right = 'auto';
+        }
+        
+        initialLeft = parseInt(container.style.left || 0, 10);
+        initialTop = parseInt(container.style.top || 0, 10);
+        
+        button.style.cursor = 'grabbing';
+        e.preventDefault(); // Prevent text selection while dragging
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        
+        container.style.left = `${initialLeft + dx}px`;
+        container.style.top = `${initialTop + dy}px`;
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            button.style.cursor = 'pointer';
+        }
+    });
 }
 
 startObserver();
