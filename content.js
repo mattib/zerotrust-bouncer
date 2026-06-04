@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC: content.js loaded");
+console.log("ZeroTrust Bouncer POC v0.1.1: content.js loaded");
 
 // Inject inject.js into the main page context to override window.fetch
 const script = document.createElement('script');
