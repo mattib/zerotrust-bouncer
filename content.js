@@ -1,6 +1,6 @@
-console.log("ZeroTrust Bouncer POC v0.1.5: content.js loaded");
+console.log("ZeroTrust Bouncer POC v0.1.6: content.js loaded");
 
-// Inject the fetch interceptor (Phase 1: Masking)
+// Inject the fetch interceptor
 const script = document.createElement('script');
 script.src = chrome.runtime.getURL('inject.js');
 script.onload = function() {
@@ -8,15 +8,37 @@ script.onload = function() {
 };
 (document.head || document.documentElement).appendChild(script);
 
-// PHASE 2: UNMASKING ENGINE (DOM Observer)
-const unmaskTarget = "[EMAIL_1]";
-const unmaskValue = "test@test.com";
+// PHASE 2: DYNAMIC UNMASKING ENGINE (DOM Observer)
+let piiMap = {};
+
+// Listen for updates from the Masker (inject.js)
+window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
+    try {
+        piiMap = JSON.parse(e.detail);
+        console.log("ZeroTrust Bouncer v0.1.6: Received updated PII map!", piiMap);
+        unmaskNode(document.body);
+    } catch (err) {
+        console.error("ZeroTrust Bouncer v0.1.6: Error parsing map", err);
+    }
+});
 
 function unmaskNode(node) {
+    if (Object.keys(piiMap).length === 0) return;
+
     if (node.nodeType === Node.TEXT_NODE) {
-        if (node.nodeValue.includes(unmaskTarget)) {
-            node.nodeValue = node.nodeValue.replaceAll(unmaskTarget, unmaskValue);
-            console.log("ZeroTrust Bouncer v0.1.5: Unmasked PII on screen!");
+        let text = node.nodeValue;
+        let modified = false;
+        
+        for (const [token, realValue] of Object.entries(piiMap)) {
+            if (text.includes(token)) {
+                text = text.replaceAll(token, realValue);
+                modified = true;
+                console.log(`ZeroTrust Bouncer v0.1.6: Unmasked ${token} on screen!`);
+            }
+        }
+        
+        if (modified) {
+            node.nodeValue = text;
         }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
         if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
@@ -34,15 +56,24 @@ const observer = new MutationObserver((mutations) => {
                 unmaskNode(node);
             }
         } else if (mutation.type === 'characterData') {
-            if (mutation.target.nodeValue.includes(unmaskTarget)) {
-                mutation.target.nodeValue = mutation.target.nodeValue.replaceAll(unmaskTarget, unmaskValue);
-                console.log("ZeroTrust Bouncer v0.1.5: Unmasked PII on screen (text mutation)!");
+            let text = mutation.target.nodeValue;
+            let modified = false;
+            
+            for (const [token, realValue] of Object.entries(piiMap)) {
+                if (text.includes(token)) {
+                    text = text.replaceAll(token, realValue);
+                    modified = true;
+                    console.log(`ZeroTrust Bouncer v0.1.6: Unmasked ${token} on screen (text mutation)!`);
+                }
+            }
+            
+            if (modified) {
+                mutation.target.nodeValue = text;
             }
         }
     }
 });
 
-// We need to wait for the body to exist before observing
 const startObserver = () => {
     if (document.body) {
         observer.observe(document.body, {
