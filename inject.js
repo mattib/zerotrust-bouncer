@@ -1,4 +1,4 @@
-console.log("ZeroTrust Bouncer POC v0.2.0: inject.js loaded (Main World)");
+console.log("ZeroTrust Bouncer POC v0.2.1: inject.js loaded (Main World)");
 
 const PII_REGEXES = [
     { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
@@ -47,7 +47,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
                 }
             }
         }
-        console.log("ZeroTrust Bouncer v0.2.0: Unmasked text for clipboard copy!");
+        console.log("ZeroTrust Bouncer v0.2.1: Unmasked text for clipboard copy!");
         return Reflect.apply(originalWriteText, navigator.clipboard, [unmaskedText]);
     };
 }
@@ -66,7 +66,7 @@ window.fetch = async function(...args) {
     } catch (e) {}
 
     if (urlString.includes('conversation') || urlString.includes('batchexecute') || urlString.includes('StreamGenerate')) {
-        console.log("ZeroTrust Bouncer v0.2.0: Intercepted FETCH request to " + urlString);
+        console.log("ZeroTrust Bouncer v0.2.1: Intercepted FETCH request to " + urlString);
         try {
             let bodyText = null;
             let isRequestObj = false;
@@ -82,17 +82,17 @@ window.fetch = async function(...args) {
                 const maskedText = maskText(bodyText);
                 
                 if (maskedText !== bodyText) {
-                    console.log("ZeroTrust Bouncer v0.2.0: PII DETECTED! Masking payload...");
+                    console.log("ZeroTrust Bouncer v0.2.1: PII DETECTED! Masking payload...");
                     if (isRequestObj) {
                         args[0] = new Request(args[0], { body: maskedText });
                     } else {
                         args[1].body = maskedText;
                     }
-                    console.log("ZeroTrust Bouncer v0.2.0: Payload Masked Successfully! Forwarding to OpenAI...");
+                    console.log("ZeroTrust Bouncer v0.2.1: Payload Masked Successfully! Forwarding to OpenAI...");
                 }
             }
         } catch(e) {
-            console.error("ZeroTrust Bouncer v0.2.0: Error during masking", e);
+            console.error("ZeroTrust Bouncer v0.2.1: Error during masking", e);
         }
     }
     
@@ -111,16 +111,16 @@ XMLHttpRequest.prototype.send = function(body) {
         if (typeof body === 'string' && this._url) {
             let urlString = String(this._url);
             if (urlString.includes('conversation') || urlString.includes('batchexecute') || urlString.includes('StreamGenerate')) {
-                console.log("ZeroTrust Bouncer v0.2.0: Intercepted XHR request to " + urlString);
+                console.log("ZeroTrust Bouncer v0.2.1: Intercepted XHR request to " + urlString);
                 const maskedText = maskText(body);
                 if (maskedText !== body) {
-                    console.log("ZeroTrust Bouncer v0.2.0: PII DETECTED in XHR! Masking payload...");
+                    console.log("ZeroTrust Bouncer v0.2.1: PII DETECTED in XHR! Masking payload...");
                     body = maskedText;
                 }
             }
         }
     } catch(e) {
-        console.error("ZeroTrust Bouncer v0.2.0: Error during XHR masking", e);
+        console.error("ZeroTrust Bouncer v0.2.1: Error during XHR masking", e);
     }
     return Reflect.apply(originalXHRSend, this, [body]);
 };

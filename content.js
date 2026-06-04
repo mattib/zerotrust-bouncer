@@ -1,12 +1,6 @@
-console.log("ZeroTrust Bouncer POC v0.2.0: content.js loaded");
+console.log("ZeroTrust Bouncer POC v0.2.1: content.js loaded");
 
-// Inject the fetch interceptor
-const script = document.createElement('script');
-script.src = chrome.runtime.getURL('inject.js');
-script.onload = function() {
-    this.remove();
-};
-(document.head || document.documentElement).appendChild(script);
+// Removed manual injection, handled by MV3 MAIN world
 
 // PHASE 2: DYNAMIC UNMASKING ENGINE (DOM Observer)
 let piiMap = {};
@@ -15,10 +9,10 @@ let piiMap = {};
 window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     try {
         piiMap = JSON.parse(e.detail);
-        console.log("ZeroTrust Bouncer v0.2.0: Received updated PII map!", piiMap);
+        console.log("ZeroTrust Bouncer v0.2.1: Received updated PII map!", piiMap);
         unmaskNode(document.body);
     } catch (err) {
-        console.error("ZeroTrust Bouncer v0.2.0: Error parsing map", err);
+        console.error("ZeroTrust Bouncer v0.2.1: Error parsing map", err);
     }
 });
 
@@ -33,7 +27,7 @@ function unmaskNode(node) {
             if (text.includes(token)) {
                 text = text.replaceAll(token, realValue);
                 modified = true;
-                console.log(`ZeroTrust Bouncer v0.2.0: Unmasked ${token} on screen!`);
+                console.log(`ZeroTrust Bouncer v0.2.1: Unmasked ${token} on screen!`);
             }
         }
         
@@ -63,7 +57,7 @@ const observer = new MutationObserver((mutations) => {
                 if (text.includes(token)) {
                     text = text.replaceAll(token, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.2.0: Unmasked ${token} on screen (text mutation)!`);
+                    console.log(`ZeroTrust Bouncer v0.2.1: Unmasked ${token} on screen (text mutation)!`);
                 }
             }
             
