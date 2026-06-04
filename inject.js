@@ -1,5 +1,3 @@
-console.log("ZeroTrust Bouncer POC v0.2.8: inject.js hook starting");
-
 const originalFetch = window.fetch;
 window.fetch = async function(...args) {
     let urlString = "";
@@ -16,7 +14,7 @@ window.fetch = async function(...args) {
     const provider = window.ZeroTrust.providers.find(p => p.shouldIntercept(urlString));
 
     if (provider) {
-        console.log(`ZeroTrust Bouncer v0.2.8: Intercepted FETCH request for ${provider.name} -> ${urlString}`);
+        window.ZeroTrust.log(`Intercepted FETCH request for ${provider.name} -> ${urlString}`);
         try {
             let bodyText = null;
             let isRequestObj = false;
@@ -32,17 +30,17 @@ window.fetch = async function(...args) {
                 const maskedText = provider.processPayload(bodyText);
                 
                 if (maskedText !== bodyText) {
-                    console.log(`ZeroTrust Bouncer v0.2.8: PII DETECTED! Masking payload for ${provider.name}...`);
+                    window.ZeroTrust.log(`PII DETECTED! Masking payload for ${provider.name}...`);
                     if (isRequestObj) {
                         args[0] = new Request(args[0], { body: maskedText });
                     } else {
                         args[1].body = maskedText;
                     }
-                    console.log(`ZeroTrust Bouncer v0.2.8: Payload Masked Successfully! Forwarding...`);
+                    window.ZeroTrust.log(`Payload Masked Successfully! Forwarding...`);
                 }
             }
         } catch(e) {
-            console.error("ZeroTrust Bouncer v0.2.8: Error during masking", e);
+            console.error(window.ZeroTrust.logPrefix, "Error during masking", e);
         }
     }
     
@@ -62,16 +60,16 @@ XMLHttpRequest.prototype.send = function(body) {
             let urlString = String(this._url);
             const provider = window.ZeroTrust.providers.find(p => p.shouldIntercept(urlString));
             if (provider) {
-                console.log(`ZeroTrust Bouncer v0.2.8: Intercepted XHR request for ${provider.name} -> ${urlString}`);
+                window.ZeroTrust.log(`Intercepted XHR request for ${provider.name} -> ${urlString}`);
                 const maskedText = provider.processPayload(body);
                 if (maskedText !== body) {
-                    console.log(`ZeroTrust Bouncer v0.2.8: PII DETECTED in XHR! Masking payload for ${provider.name}...`);
+                    window.ZeroTrust.log(`PII DETECTED in XHR! Masking payload for ${provider.name}...`);
                     body = maskedText;
                 }
             }
         }
     } catch(e) {
-        console.error("ZeroTrust Bouncer v0.2.8: Error during XHR masking", e);
+        console.error(window.ZeroTrust.logPrefix, "Error during XHR masking", e);
     }
     return Reflect.apply(originalXHRSend, this, [body]);
 };

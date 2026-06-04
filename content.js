@@ -1,18 +1,23 @@
-console.log("ZeroTrust Bouncer POC v0.2.6: content.js loaded");
+const manifest = chrome.runtime.getManifest();
+const ztPrefix = `[${manifest.name} v${manifest.version}]`;
+const ztLog = (...args) => console.log(ztPrefix, ...args);
 
-// Removed manual injection, handled by MV3 MAIN world
+ztLog("Engine Started. Built by Matti B.");
 
-// PHASE 2: DYNAMIC UNMASKING ENGINE (DOM Observer)
+// Send prefix to MAIN world scripts
+window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_InitLogger', { 
+    detail: JSON.stringify({ prefix: ztPrefix }) 
+}));
+
 let piiMap = {};
 
-// Listen for updates from the Masker (inject.js)
 window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     try {
         piiMap = JSON.parse(e.detail);
-        console.log("ZeroTrust Bouncer v0.2.6: Received updated PII map!", piiMap);
+        ztLog("Received updated PII map!", piiMap);
         unmaskNode(document.body);
     } catch (err) {
-        console.error("ZeroTrust Bouncer v0.2.6: Error parsing map", err);
+        console.error(ztPrefix, "Error parsing map", err);
     }
 });
 
@@ -27,13 +32,13 @@ function unmaskNode(node) {
             if (text.includes(token)) {
                 text = text.replaceAll(token, realValue);
                 modified = true;
-                console.log(`ZeroTrust Bouncer v0.2.9: Unmasked ${token} on screen!`);
+                ztLog(`Unmasked ${token} on screen!`);
             } else {
                 const bareToken = token.slice(1, -1);
                 if (text.includes(bareToken)) {
                     text = text.replaceAll(bareToken, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.2.9: Unmasked bare ${bareToken} on screen!`);
+                    ztLog(`Unmasked bare ${bareToken} on screen!`);
                 }
             }
         }
@@ -42,7 +47,6 @@ function unmaskNode(node) {
             node.nodeValue = text;
         }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
-        // Pierce Shadow DOM
         if (node.shadowRoot) {
             if (!node.shadowRoot.__ztbObserved) {
                 try {
@@ -78,13 +82,13 @@ const observer = new MutationObserver((mutations) => {
                 if (text.includes(token)) {
                     text = text.replaceAll(token, realValue);
                     modified = true;
-                    console.log(`ZeroTrust Bouncer v0.2.9: Unmasked ${token} on screen (text mutation)!`);
+                    ztLog(`Unmasked ${token} on screen (text mutation)!`);
                 } else {
                     const bareToken = token.slice(1, -1);
                     if (text.includes(bareToken)) {
                         text = text.replaceAll(bareToken, realValue);
                         modified = true;
-                        console.log(`ZeroTrust Bouncer v0.2.9: Unmasked bare ${bareToken} on screen (text mutation)!`);
+                        ztLog(`Unmasked bare ${bareToken} on screen (text mutation)!`);
                     }
                 }
             }

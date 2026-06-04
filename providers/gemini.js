@@ -23,7 +23,7 @@ window.ZeroTrust.providers.push({
                 }
                 return body;
             } catch (e) {
-                console.error("ZeroTrust Bouncer v0.2.8: URL decode failed", e);
+                console.error(window.ZeroTrust.logPrefix || "[ZeroTrust Bouncer]", "URL decode failed", e);
             }
         }
         

@@ -1,6 +1,9 @@
-console.log("ZeroTrust Bouncer POC v0.2.8: core.js loaded (Main World)");
-
 window.ZeroTrust = window.ZeroTrust || {
+    logPrefix: "[ZeroTrust Bouncer POC]", // Default fallback
+    log: function(...args) {
+        console.log(window.ZeroTrust.logPrefix, ...args);
+    },
+    
     PII_REGEXES: [
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
         { type: "PHONE", regex: /(?:05\d-?\d{7})|(?:\+972-?5\d-?\d{7})/g },
@@ -47,11 +50,21 @@ window.ZeroTrust = window.ZeroTrust || {
     }
 };
 
+// Listen for the logger init event from content.js
+window.addEventListener('ZeroTrustBouncer_InitLogger', (e) => {
+    try {
+        const data = JSON.parse(e.detail);
+        if (data.prefix) {
+            window.ZeroTrust.logPrefix = data.prefix;
+        }
+    } catch (err) {}
+});
+
 if (navigator.clipboard && navigator.clipboard.writeText) {
     const originalWriteText = navigator.clipboard.writeText;
     navigator.clipboard.writeText = async function(text) {
         const unmaskedText = window.ZeroTrust.unmaskString(text);
-        console.log("ZeroTrust Bouncer v0.2.8: Unmasked text for clipboard.writeText!");
+        window.ZeroTrust.log("Unmasked text for clipboard.writeText!");
         return Reflect.apply(originalWriteText, navigator.clipboard, [unmaskedText]);
     };
 }
@@ -79,7 +92,7 @@ if (navigator.clipboard && navigator.clipboard.write) {
                 }
                 newItems.push(new ClipboardItem(newBlobs));
             }
-            console.log("ZeroTrust Bouncer v0.2.8: Unmasked text for clipboard.write!");
+            window.ZeroTrust.log("Unmasked text for clipboard.write!");
             return Reflect.apply(originalWrite, navigator.clipboard, [newItems]);
         }
         return Reflect.apply(originalWrite, navigator.clipboard, [data]);
@@ -96,7 +109,7 @@ document.execCommand = function(command, showUI, value) {
             if (unmaskedValue !== originalValue) {
                 activeElement.value = unmaskedValue;
                 activeElement.select();
-                console.log("ZeroTrust Bouncer v0.2.8: Unmasked text for execCommand('copy')!");
+                window.ZeroTrust.log("Unmasked text for execCommand('copy')!");
                 const result = Reflect.apply(originalExecCommand, this, [command, showUI, value]);
                 activeElement.value = originalValue;
                 activeElement.select();
@@ -114,7 +127,7 @@ document.addEventListener('copy', (e) => {
         if (format === 'text/plain') {
             const unmaskedData = window.ZeroTrust.unmaskString(data);
             if (unmaskedData !== data) {
-                console.log("ZeroTrust Bouncer v0.2.8: Unmasked text for clipboardData.setData!");
+                window.ZeroTrust.log("Unmasked text for clipboardData.setData!");
             }
             return Reflect.apply(originalSetData, this, [format, unmaskedData]);
         }

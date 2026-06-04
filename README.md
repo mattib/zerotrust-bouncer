@@ -1,13 +1,17 @@
-# ZeroTrust Bouncer
+# ZeroTrust Bouncer (POC)
 
-An AI Privacy Masking Chrome Extension.
+A zero-trust privacy proxy extension that runs entirely in your browser. It intercepts and masks Personally Identifiable Information (PII) before it ever hits the network layer, preventing LLM providers (ChatGPT, Claude, Gemini) from receiving your raw data.
 
-## Overview
-ZeroTrust Bouncer intercepts outgoing text to LLMs (like ChatGPT) and dynamically masks Personally Identifiable Information (PII) before it leaves the browser. When the AI responds, the bouncer seamlessly unmasks the tokens back to the original text in the UI.
+**Built by Matti B.**
 
-This ensures sensitive data never leaves your machine, while maintaining a frictionless user experience.
+### How it works
+1. **Network Hooking:** Intercepts `fetch` and `XMLHttpRequest` directly in the browser's Main World.
+2. **Dynamic Masking:** Replaces real IDs, phone numbers, and emails with anonymized tokens (e.g., `[EMAIL_1]`) on the fly.
+3. **Visual Unmasking:** Seamlessly unmasks tokens visually on the screen and actively hooks the Clipboard API so you can copy and paste real text back out of the AI platform securely.
 
-## Development
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable **Developer mode**
-3. Click **Load unpacked** and select this directory.
+### Architecture
+* `manifest.json`: Configuration and Permissions.
+* `core.js`: The central token engine and dictionary mapping.
+* `content.js`: The Isolated World UI bridge for Shadow DOM injection.
+* `inject.js`: The Main World network interceptor.
+* `providers/`: Tiny adapter functions for handling different LLM API payloads (JSON, URL-encoded, etc).
