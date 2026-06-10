@@ -204,9 +204,15 @@ function injectFloatingWidget(initialSettings) {
         .section-title { font-size: 11px; text-transform: uppercase; color: #9ca3af; margin: 12px 12px 4px 12px; letter-spacing: 0.5px; font-weight: 600;}
         
         #view-options { display: none; }
+        #view-pii { display: none; }
+        #view-api-keys { display: none; }
         .btn-back { background: none; border: none; cursor: pointer; padding: 0; margin-right: 8px; display: flex; align-items: center; color: #6b7280; }
         .btn-back:hover { color: #111827; }
         .btn-back svg { width: 18px; height: 18px; fill: currentColor; }
+        .sub-panel-body { max-height: 300px; overflow-y: auto; padding: 0 0 8px 0; }
+        .customize-row { text-align: right; padding: 0 12px 6px 12px; }
+        .customize-link { font-size: 11px; color: #10b981; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
+        .customize-link:hover { text-decoration: underline; }
     `;
 
     const wrapper = document.createElement('div');
@@ -234,7 +240,7 @@ function injectFloatingWidget(initialSettings) {
         </div>
         <div id="view-options">
             <div class="panel-header">
-                <button class="btn-back" id="btn-back"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <button class="btn-back" id="btn-back-options"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
                 <h3 class="panel-title">Settings</h3>
             </div>
             <div class="panel-body" style="padding: 0 0 8px 0;">
@@ -242,7 +248,23 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">ChatGPT</span><label class="switch"><input type="checkbox" id="tgl-provider_chatgpt" ${initialSettings.provider_chatgpt ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Claude</span><label class="switch"><input type="checkbox" id="tgl-provider_claude" ${initialSettings.provider_claude ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Gemini</span><label class="switch"><input type="checkbox" id="tgl-provider_gemini" ${initialSettings.provider_gemini ? 'checked' : ''}><span class="slider"></span></label></div>
-                
+
+                <div class="section-title">PII Types</div>
+                <div class="toggle-row"><span class="toggle-label">All PII</span><label class="switch"><input type="checkbox" id="tgl-pii_master" ${['pii_email','pii_phone','pii_id','pii_phone_il_landline','pii_phone_intl','pii_passport_il','pii_company_il','pii_vat_il','pii_ssn_us','pii_ni_uk','pii_plate_il','pii_ipv4','pii_ipv6','pii_mac','pii_url_creds'].every(k => initialSettings[k]) ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="customize-row"><button class="customize-link" id="btn-pii-customize">customize ›</button></div>
+
+                <div class="section-title">API Keys</div>
+                <div class="toggle-row"><span class="toggle-label">All API Keys</span><label class="switch"><input type="checkbox" id="tgl-pii_api_key" ${initialSettings.pii_api_key ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="customize-row"><button class="customize-link" id="btn-apikeys-customize">customize ›</button></div>
+            </div>
+        </div>
+
+        <div id="view-pii">
+            <div class="panel-header">
+                <button class="btn-back" id="btn-back-pii"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <h3 class="panel-title">PII Types</h3>
+            </div>
+            <div class="sub-panel-body">
                 <div class="section-title">Phones</div>
                 <div class="toggle-row"><span class="toggle-label">Israeli Mobile (05X)</span><label class="switch"><input type="checkbox" id="tgl-pii_phone" ${initialSettings.pii_phone ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">IL Landline (0X-XXXXXXX)</span><label class="switch"><input type="checkbox" id="tgl-pii_phone_il_landline" ${initialSettings.pii_phone_il_landline ? 'checked' : ''}><span class="slider"></span></label></div>
@@ -263,9 +285,16 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">IPv6 Address</span><label class="switch"><input type="checkbox" id="tgl-pii_ipv6" ${initialSettings.pii_ipv6 ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">MAC Address</span><label class="switch"><input type="checkbox" id="tgl-pii_mac" ${initialSettings.pii_mac ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">URL with Credentials</span><label class="switch"><input type="checkbox" id="tgl-pii_url_creds" ${initialSettings.pii_url_creds ? 'checked' : ''}><span class="slider"></span></label></div>
+            </div>
+        </div>
 
-                <div class="section-title">API Keys</div>
-                <div class="toggle-row"><span class="toggle-label" style="font-weight:600">All API Keys (master)</span><label class="switch"><input type="checkbox" id="tgl-pii_api_key" ${initialSettings.pii_api_key ? 'checked' : ''}><span class="slider"></span></label></div>
+        <div id="view-api-keys">
+            <div class="panel-header">
+                <button class="btn-back" id="btn-back-apikeys"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <h3 class="panel-title">API Keys</h3>
+            </div>
+            <div class="sub-panel-body">
+                <div class="toggle-row"><span class="toggle-label" style="font-weight:600">All API Keys</span><label class="switch"><input type="checkbox" id="tgl2-pii_api_key" ${initialSettings.pii_api_key ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Anthropic</span><label class="switch"><input type="checkbox" id="tgl-api_key_anthropic" ${initialSettings.api_key_anthropic ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">OpenAI</span><label class="switch"><input type="checkbox" id="tgl-api_key_openai" ${initialSettings.api_key_openai ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">AWS</span><label class="switch"><input type="checkbox" id="tgl-api_key_aws" ${initialSettings.api_key_aws ? 'checked' : ''}><span class="slider"></span></label></div>
@@ -333,18 +362,20 @@ function injectFloatingWidget(initialSettings) {
     // Navigation Listeners
     const viewMain = panel.querySelector('#view-main');
     const viewOptions = panel.querySelector('#view-options');
-    
-    panel.querySelector('#btn-options').addEventListener('click', (e) => {
-        console.log("[ZeroTrust] Options clicked");
-        viewMain.style.display = 'none';
-        viewOptions.style.display = 'block';
-    });
-    
-    panel.querySelector('#btn-back').addEventListener('click', (e) => {
-        console.log("[ZeroTrust] Back clicked");
-        viewOptions.style.display = 'none';
-        viewMain.style.display = 'block';
-    });
+    const viewPii = panel.querySelector('#view-pii');
+    const viewApiKeys = panel.querySelector('#view-api-keys');
+
+    const showOnly = (view) => {
+        [viewMain, viewOptions, viewPii, viewApiKeys].forEach(v => v.style.display = 'none');
+        view.style.display = 'block';
+    };
+
+    panel.querySelector('#btn-options').addEventListener('click', () => showOnly(viewOptions));
+    panel.querySelector('#btn-back-options').addEventListener('click', () => showOnly(viewMain));
+    panel.querySelector('#btn-pii-customize').addEventListener('click', () => showOnly(viewPii));
+    panel.querySelector('#btn-back-pii').addEventListener('click', () => showOnly(viewOptions));
+    panel.querySelector('#btn-apikeys-customize').addEventListener('click', () => showOnly(viewApiKeys));
+    panel.querySelector('#btn-back-apikeys').addEventListener('click', () => showOnly(viewOptions));
 
     panel.querySelector('#btn-issue').addEventListener('click', () => {
         window.open('mailto:mattiba@gmail.com?subject=ZeroTrust%20Bouncer%20Feedback');
@@ -354,18 +385,18 @@ function injectFloatingWidget(initialSettings) {
         window.open('https://github.com/mattib/zerotrust-bouncer', '_blank');
     });
 
-    // Toggle Listeners
+    // PII master keys list (all individual pii_* types, no api keys)
+    const PII_KEYS = [
+        'pii_email', 'pii_phone', 'pii_id', 'pii_phone_il_landline', 'pii_phone_intl',
+        'pii_passport_il', 'pii_company_il', 'pii_vat_il', 'pii_ssn_us', 'pii_ni_uk',
+        'pii_plate_il', 'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds'
+    ];
+
+    // Toggle Listeners — standard per-key toggles
     const toggleIds = [
-        // Providers
         'provider_chatgpt', 'provider_claude', 'provider_gemini',
-        // Phones
-        'pii_phone', 'pii_phone_il_landline', 'pii_phone_intl',
-        // Identity
-        'pii_email', 'pii_id', 'pii_passport_il', 'pii_company_il', 'pii_vat_il', 'pii_ssn_us', 'pii_ni_uk', 'pii_plate_il',
-        // Network
-        'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds',
-        // API Keys — master + per-service
         'pii_api_key',
+        ...PII_KEYS,
         'api_key_anthropic', 'api_key_openai', 'api_key_aws',
         'api_key_github_pat', 'api_key_github_oauth', 'api_key_github_app', 'api_key_github_fine',
         'api_key_google', 'api_key_slack_bot', 'api_key_slack_user',
@@ -383,16 +414,40 @@ function injectFloatingWidget(initialSettings) {
         'api_key_telegram_bot', 'api_key_vercel', 'api_key_bearer'
     ];
     toggleIds.forEach(id => {
-        const tgl = panel.querySelector('#tgl-' + id);
-        if (tgl) {
-            tgl.addEventListener('change', (e) => {
-                const update = {};
-                update[id] = e.target.checked;
-                chrome.storage.local.set(update);
-                console.log(`[ZeroTrust] Toggled ${id}: ${e.target.checked}`);
-            });
-        }
+        // pii_api_key appears in two places (options page + api-keys sub-page header)
+        ['tgl-' + id, 'tgl2-' + id].forEach(tglId => {
+            const tgl = panel.querySelector('#' + tglId);
+            if (tgl) {
+                tgl.addEventListener('change', (e) => {
+                    const update = {};
+                    update[id] = e.target.checked;
+                    chrome.storage.local.set(update);
+                    // keep both copies in sync
+                    ['tgl-' + id, 'tgl2-' + id].forEach(otherId => {
+                        const other = panel.querySelector('#' + otherId);
+                        if (other && other !== tgl) other.checked = e.target.checked;
+                    });
+                    console.log(`[ZeroTrust] Toggled ${id}: ${e.target.checked}`);
+                });
+            }
+        });
     });
+
+    // PII master toggle — bulk-sets all individual PII keys
+    const piiMasterTgl = panel.querySelector('#tgl-pii_master');
+    if (piiMasterTgl) {
+        piiMasterTgl.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            const bulk = {};
+            PII_KEYS.forEach(k => bulk[k] = checked);
+            chrome.storage.local.set(bulk);
+            PII_KEYS.forEach(k => {
+                const t = panel.querySelector('#tgl-' + k);
+                if (t) t.checked = checked;
+            });
+            console.log(`[ZeroTrust] PII master → ${checked}`);
+        });
+    };
 
     // Dragging Logic
     let isDragging = false;
