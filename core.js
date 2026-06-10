@@ -161,6 +161,16 @@ window.ZeroTrust = window.ZeroTrust || {
         // Israeli company registration (ח"פ) — starts with 5, 9 digits; before ID
         { type: "COMPANY_IL", regex: /\b5\d{8}\b/g },
 
+        // Credit card — 13-19 digits, grouped or raw; Luhn-validated to kill false positives
+        // Covers: Visa/MC/Discover (16-digit 4-4-4-4), Amex (15-digit 4-6-5), raw compact
+        {
+            type: "CREDIT_CARD",
+            regex: /\b\d{4}[ \-]\d{4}[ \-]\d{4}[ \-]\d{4}\b|\b\d{4}[ \-]\d{6}[ \-]\d{5}\b|\b\d{13,19}\b/g,
+            validate: function(match) {
+                return window.ZeroTrust.luhn(match.replace(/[ \-]/g, ''));
+            }
+        },
+
         // Existing broad patterns
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
         { type: "PHONE", regex: /(?:05\d-?\d{7})|(?:\+972-?5\d-?\d{7})/g },
@@ -186,9 +196,22 @@ window.ZeroTrust = window.ZeroTrust || {
         { type: "PLATE_IL", regex: /\b(?:\d{2}-\d{3}-\d{2}|\d{3}-\d{2}-\d{3})\b/g }
     ],
     piiMap: {},
-    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0 },
+    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0 },
     providers: [],
-    
+
+    // Luhn checksum — strips spaces/dashes, validates credit card digits
+    luhn: function(digits) {
+        let sum = 0, alt = false;
+        for (let i = digits.length - 1; i >= 0; i--) {
+            let n = parseInt(digits[i], 10);
+            if (isNaN(n)) return false;
+            if (alt) { n *= 2; if (n > 9) n -= 9; }
+            sum += n;
+            alt = !alt;
+        }
+        return sum % 10 === 0;
+    },
+
     maskText: function(text) {
         let newText = text;
         let modified = false;
@@ -199,6 +222,9 @@ window.ZeroTrust = window.ZeroTrust || {
             if (window.ZeroTrust.config[configKey] === false) continue; // Skip disabled PII types
 
             newText = newText.replace(rule.regex, (match) => {
+                // Per-rule validation (e.g. Luhn for credit cards) — skip if fails
+                if (rule.validate && !rule.validate(match)) return match;
+
                 let existingToken = Object.keys(window.ZeroTrust.piiMap).find(key => window.ZeroTrust.piiMap[key] === match);
                 if (existingToken) return existingToken;
 

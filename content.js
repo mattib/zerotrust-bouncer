@@ -15,7 +15,7 @@ const defaultSettings = {
     pii_email: true, pii_phone: true, pii_id: true,
     pii_phone_il_landline: true, pii_phone_intl: true,
     pii_passport_il: true, pii_company_il: true, pii_vat_il: true,
-    pii_ssn_us: true, pii_ni_uk: true, pii_plate_il: true,
+    pii_ssn_us: true, pii_ni_uk: true, pii_plate_il: true, pii_credit_card: true,
     pii_ipv4: true, pii_ipv6: true, pii_mac: true, pii_url_creds: true,
     // API Keys — master toggle + per-service
     pii_api_key: true,
@@ -279,6 +279,7 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">US SSN</span><label class="switch"><input type="checkbox" id="tgl-pii_ssn_us" ${initialSettings.pii_ssn_us ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">UK NI Number</span><label class="switch"><input type="checkbox" id="tgl-pii_ni_uk" ${initialSettings.pii_ni_uk ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">IL Vehicle Plate</span><label class="switch"><input type="checkbox" id="tgl-pii_plate_il" ${initialSettings.pii_plate_il ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Credit Card</span><label class="switch"><input type="checkbox" id="tgl-pii_credit_card" ${initialSettings.pii_credit_card ? 'checked' : ''}><span class="slider"></span></label></div>
 
                 <div class="section-title">Network</div>
                 <div class="toggle-row"><span class="toggle-label">IPv4 Address</span><label class="switch"><input type="checkbox" id="tgl-pii_ipv4" ${initialSettings.pii_ipv4 ? 'checked' : ''}><span class="slider"></span></label></div>
@@ -389,7 +390,7 @@ function injectFloatingWidget(initialSettings) {
     const PII_KEYS = [
         'pii_email', 'pii_phone', 'pii_id', 'pii_phone_il_landline', 'pii_phone_intl',
         'pii_passport_il', 'pii_company_il', 'pii_vat_il', 'pii_ssn_us', 'pii_ni_uk',
-        'pii_plate_il', 'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds'
+        'pii_plate_il', 'pii_credit_card', 'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds'
     ];
 
     // Toggle Listeners — standard per-key toggles

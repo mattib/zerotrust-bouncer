@@ -714,6 +714,65 @@ test('ConfigUpdate event triggers regex rebuild (Stripe toggle via event)', () =
 });
 
 // ---------------------------------------------------------------------------
+// CREDIT_CARD — Luhn-validated; positive = known test card numbers
+// ---------------------------------------------------------------------------
+console.log('\n--- CREDIT_CARD ---');
+
+// Positive — real test card numbers (all Luhn-valid)
+test('Visa raw 4111111111111111', () => {
+    assert(maskContains('4111111111111111', 'CREDIT_CARD'));
+});
+test('Visa spaced 4111 1111 1111 1111', () => {
+    assert(maskContains('4111 1111 1111 1111', 'CREDIT_CARD'));
+});
+test('Visa dashed 4111-1111-1111-1111', () => {
+    assert(maskContains('4111-1111-1111-1111', 'CREDIT_CARD'));
+});
+test('MasterCard raw 5500005555555559', () => {
+    assert(maskContains('5500005555555559', 'CREDIT_CARD'));
+});
+test('MasterCard spaced 5500 0055 5555 5559', () => {
+    assert(maskContains('5500 0055 5555 5559', 'CREDIT_CARD'));
+});
+test('Amex raw 378282246310005 (15 digits)', () => {
+    assert(maskContains('378282246310005', 'CREDIT_CARD'));
+});
+test('Amex spaced 3782 822463 10005', () => {
+    assert(maskContains('3782 822463 10005', 'CREDIT_CARD'));
+});
+test('Discover raw 6011111111111117', () => {
+    assert(maskContains('6011111111111117', 'CREDIT_CARD'));
+});
+test('card in sentence context', () => {
+    assert(maskContains('My card number is 4111111111111111 please charge it', 'CREDIT_CARD'));
+});
+
+// Negative — Luhn failure must block masking
+test('random 16 digits fail Luhn 1234567890123456', () => {
+    assert(!maskContains('1234567890123456', 'CREDIT_CARD'), 'should not mask non-Luhn 16-digit string');
+});
+test('too short (12 digits) not matched', () => {
+    assert(!maskContains('411111111111', 'CREDIT_CARD'), 'should not mask 12-digit string');
+});
+test('9-digit number not matched (not long enough)', () => {
+    assert(!maskContains('411111111', 'CREDIT_CARD'), 'should not mask 9-digit string');
+});
+test('all-zeros 16 digits fail Luhn', () => {
+    // 0000000000000000 — sum=0, 0%10=0 → actually passes Luhn! So skip — not a realistic false positive concern.
+    // Instead test a real non-card: 9999999999999999
+    // 9*16 with alternation: odd positions doubled=18→9, even=9; 8*9+8*9=144, 144%10≠0
+    assert(!maskContains('9999999999999999', 'CREDIT_CARD'), 'should not mask 9999999999999999 (fails Luhn)');
+});
+
+// Negative — disabled config
+test('credit card not masked when pii_credit_card disabled', () => {
+    window.ZeroTrust.config.pii_credit_card = false;
+    const result = !maskContains('4111111111111111', 'CREDIT_CARD');
+    window.ZeroTrust.config.pii_credit_card = true;
+    assert(result, 'should not mask when pii_credit_card is false');
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');
