@@ -17,6 +17,8 @@ const defaultSettings = {
     pii_passport_il: true, pii_company_il: true, pii_vat_il: true,
     pii_ssn_us: true, pii_ni_uk: true, pii_plate_il: true, pii_credit_card: true,
     pii_ipv4: true, pii_ipv6: true, pii_mac: true, pii_url_creds: true,
+    // Custom user-defined patterns
+    custom_patterns: [],
     // API Keys — master toggle + per-service
     pii_api_key: true,
     api_key_anthropic: true, api_key_openai: true, api_key_aws: true,
@@ -213,6 +215,22 @@ function injectFloatingWidget(initialSettings) {
         .customize-row { text-align: right; padding: 0 12px 6px 12px; }
         .customize-link { font-size: 11px; color: #10b981; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
         .customize-link:hover { text-decoration: underline; }
+        #view-custom-patterns { display: none; }
+        .custom-form { padding: 8px 12px 10px; border-bottom: 1px solid #e5e7eb; }
+        .custom-input { width: 100%; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; outline: none; box-sizing: border-box; font-family: inherit; margin-top: 4px; }
+        .custom-input:focus { border-color: #10b981; }
+        .custom-input-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .custom-error { font-size: 11px; color: #ef4444; min-height: 14px; margin-top: 2px; }
+        .regex-help { font-size: 11px; color: #9ca3af; text-decoration: none; width: 18px; height: 18px; border: 1px solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .regex-help:hover { color: #10b981; border-color: #10b981; }
+        .custom-add-btn { margin-top: 8px; width: 100%; padding: 6px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .custom-add-btn:hover { background: #059669; }
+        .custom-empty { padding: 14px 12px; text-align: center; font-size: 12px; color: #9ca3af; }
+        .custom-item { padding: 7px 12px; border-top: 1px solid #f3f4f6; }
+        .custom-item-header { display: flex; justify-content: space-between; align-items: center; }
+        .custom-item-pattern { font-size: 11px; color: #6b7280; font-family: monospace; margin-top: 2px; word-break: break-all; }
+        .custom-delete { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 13px; padding: 0 2px; line-height: 1; }
+        .custom-delete:hover { color: #ef4444; }
     `;
 
     const wrapper = document.createElement('div');
@@ -256,6 +274,9 @@ function injectFloatingWidget(initialSettings) {
                 <div class="section-title">API Keys</div>
                 <div class="toggle-row"><span class="toggle-label">All API Keys</span><label class="switch"><input type="checkbox" id="tgl-pii_api_key" ${initialSettings.pii_api_key ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="customize-row"><button class="customize-link" id="btn-apikeys-customize">customize ›</button></div>
+
+                <div class="section-title">Custom</div>
+                <div class="customize-row"><button class="customize-link" id="btn-custom-customize">manage ›</button></div>
             </div>
         </div>
 
@@ -352,6 +373,25 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">Bearer Token</span><label class="switch"><input type="checkbox" id="tgl-api_key_bearer" ${initialSettings.api_key_bearer ? 'checked' : ''}><span class="slider"></span></label></div>
             </div>
         </div>
+
+        <div id="view-custom-patterns">
+            <div class="panel-header">
+                <button class="btn-back" id="btn-back-custom"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <h3 class="panel-title">Custom Patterns</h3>
+            </div>
+            <div class="sub-panel-body">
+                <div class="custom-form">
+                    <input type="text" class="custom-input" id="custom-name" placeholder="Name (e.g. Employee ID)" autocomplete="off">
+                    <div class="custom-input-row">
+                        <input type="text" class="custom-input" id="custom-regex" placeholder="Regex (e.g. EMP-\\d{5})" autocomplete="off" style="margin-top:0; flex:1;">
+                        <a href="https://regex101.com" target="_blank" class="regex-help" title="Build your regex at regex101.com">?</a>
+                    </div>
+                    <div id="custom-error" class="custom-error"></div>
+                    <button class="custom-add-btn" id="btn-custom-save">+ Add Pattern</button>
+                </div>
+                <div id="custom-list"></div>
+            </div>
+        </div>
     `;
 
     wrapper.appendChild(button);
@@ -365,9 +405,10 @@ function injectFloatingWidget(initialSettings) {
     const viewOptions = panel.querySelector('#view-options');
     const viewPii = panel.querySelector('#view-pii');
     const viewApiKeys = panel.querySelector('#view-api-keys');
+    const viewCustom = panel.querySelector('#view-custom-patterns');
 
     const showOnly = (view) => {
-        [viewMain, viewOptions, viewPii, viewApiKeys].forEach(v => v.style.display = 'none');
+        [viewMain, viewOptions, viewPii, viewApiKeys, viewCustom].forEach(v => v.style.display = 'none');
         view.style.display = 'block';
     };
 
@@ -377,6 +418,8 @@ function injectFloatingWidget(initialSettings) {
     panel.querySelector('#btn-back-pii').addEventListener('click', () => showOnly(viewOptions));
     panel.querySelector('#btn-apikeys-customize').addEventListener('click', () => showOnly(viewApiKeys));
     panel.querySelector('#btn-back-apikeys').addEventListener('click', () => showOnly(viewOptions));
+    panel.querySelector('#btn-custom-customize').addEventListener('click', () => { renderCustomPatterns(); showOnly(viewCustom); });
+    panel.querySelector('#btn-back-custom').addEventListener('click', () => showOnly(viewOptions));
 
     panel.querySelector('#btn-issue').addEventListener('click', () => {
         window.open('mailto:mattiba@gmail.com?subject=ZeroTrust%20Bouncer%20Feedback');
@@ -449,6 +492,76 @@ function injectFloatingWidget(initialSettings) {
             console.log(`[ZeroTrust] PII master → ${checked}`);
         });
     };
+
+    // -------------------------------------------------------------------------
+    // Custom Patterns — CRUD
+    // -------------------------------------------------------------------------
+    let customPatterns = (initialSettings.custom_patterns || []).slice();
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function saveCustomPatterns() {
+        chrome.storage.local.set({ custom_patterns: customPatterns });
+        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
+            detail: JSON.stringify({ custom_patterns: customPatterns })
+        }));
+    }
+
+    function renderCustomPatterns() {
+        const list = panel.querySelector('#custom-list');
+        if (!list) return;
+        if (!customPatterns.length) {
+            list.innerHTML = '<div class="custom-empty">No patterns yet.<br>Add one above.</div>';
+            return;
+        }
+        list.innerHTML = customPatterns.map((cp, i) => `
+            <div class="custom-item">
+                <div class="custom-item-header">
+                    <span class="toggle-label">${escHtml(cp.name)}</span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <label class="switch"><input type="checkbox" class="custom-tgl" data-idx="${i}" ${cp.enabled ? 'checked' : ''}><span class="slider"></span></label>
+                        <button class="custom-delete" data-idx="${i}" title="Delete">✕</button>
+                    </div>
+                </div>
+                <div class="custom-item-pattern">${escHtml(cp.pattern)}</div>
+            </div>
+        `).join('');
+
+        list.querySelectorAll('.custom-tgl').forEach(tgl => {
+            tgl.addEventListener('change', (e) => {
+                customPatterns[parseInt(e.target.dataset.idx)].enabled = e.target.checked;
+                saveCustomPatterns();
+            });
+        });
+        list.querySelectorAll('.custom-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                customPatterns.splice(parseInt(e.target.dataset.idx), 1);
+                saveCustomPatterns();
+                renderCustomPatterns();
+            });
+        });
+    }
+
+    panel.querySelector('#btn-custom-save').addEventListener('click', () => {
+        const nameEl = panel.querySelector('#custom-name');
+        const regexEl = panel.querySelector('#custom-regex');
+        const errorEl = panel.querySelector('#custom-error');
+        const name = nameEl.value.trim();
+        const pattern = regexEl.value.trim();
+
+        errorEl.textContent = '';
+        if (!name)    { errorEl.textContent = 'Name is required.'; return; }
+        if (!pattern) { errorEl.textContent = 'Regex is required.'; return; }
+        try { new RegExp(pattern); } catch (e) { errorEl.textContent = 'Invalid regex: ' + e.message; return; }
+
+        customPatterns.push({ id: customPatterns.length + 1, name, pattern, enabled: true });
+        saveCustomPatterns();
+        renderCustomPatterns();
+        nameEl.value = '';
+        regexEl.value = '';
+    });
 
     // Dragging Logic
     let isDragging = false;

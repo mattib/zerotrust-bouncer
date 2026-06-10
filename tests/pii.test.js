@@ -773,6 +773,84 @@ test('credit card not masked when pii_credit_card disabled', () => {
 });
 
 // ---------------------------------------------------------------------------
+// CUSTOM PATTERNS — user-defined regex via _runCustomPatterns
+// ---------------------------------------------------------------------------
+console.log('\n--- CUSTOM PATTERNS ---');
+
+function setCustomPatterns(patterns) {
+    window.ZeroTrust.config.custom_patterns = patterns;
+}
+function resetCustom() {
+    window.ZeroTrust.config.custom_patterns = [];
+}
+
+function maskCustom(input) {
+    window.ZeroTrust.piiMap = {};
+    window.ZeroTrust.piiCounters = {};
+    for (const rule of window.ZeroTrust.PII_REGEXES) { if (rule.regex) rule.regex.lastIndex = 0; }
+    return window.ZeroTrust.maskText(input);
+}
+
+test('basic custom pattern matches', () => {
+    setCustomPatterns([{ id: 1, name: 'Employee ID', pattern: 'EMP-\\d{5}', enabled: true }]);
+    const out = maskCustom('My ID is EMP-12345 thanks');
+    assert(out.includes('[CUSTOM_EMPLOYEE_ID_1]'), 'should mask EMP-12345 as CUSTOM_EMPLOYEE_ID_1');
+    assert(!out.includes('EMP-12345'), 'raw value should not appear');
+    resetCustom();
+});
+
+test('custom pattern disabled — not masked', () => {
+    setCustomPatterns([{ id: 1, name: 'Project Code', pattern: 'PROJ-[A-Z]{2}\\d{3}', enabled: false }]);
+    const out = maskCustom('Code is PROJ-AB123');
+    assert(out.includes('PROJ-AB123'), 'disabled pattern should not mask');
+    resetCustom();
+});
+
+test('multiple custom patterns in one text', () => {
+    setCustomPatterns([
+        { id: 1, name: 'Emp ID', pattern: 'EMP-\\d{5}', enabled: true },
+        { id: 2, name: 'Project', pattern: 'PROJ-[A-Z]{2}\\d{3}', enabled: true }
+    ]);
+    const out = maskCustom('Employee EMP-12345 on project PROJ-AB123');
+    assert(out.includes('[CUSTOM_EMP_ID_1]'), 'should mask employee id');
+    assert(out.includes('[CUSTOM_PROJECT_1]'), 'should mask project code');
+    assert(!out.includes('EMP-12345'), 'raw emp id gone');
+    assert(!out.includes('PROJ-AB123'), 'raw project code gone');
+    resetCustom();
+});
+
+test('invalid regex in custom pattern is silently skipped', () => {
+    setCustomPatterns([{ id: 1, name: 'Bad', pattern: '[invalid(', enabled: true }]);
+    const out = maskCustom('some text [invalid( here');
+    // should not throw and text unchanged for the bad pattern
+    assert(typeof out === 'string', 'should return a string without throwing');
+    resetCustom();
+});
+
+test('custom pattern counter increments per occurrence', () => {
+    setCustomPatterns([{ id: 1, name: 'Code', pattern: 'CODE-\\d+', enabled: true }]);
+    const out = maskCustom('First CODE-001 then CODE-002');
+    assert(out.includes('[CUSTOM_CODE_1]'), 'first occurrence');
+    assert(out.includes('[CUSTOM_CODE_2]'), 'second occurrence');
+    resetCustom();
+});
+
+test('same value masked to same token (no duplicates)', () => {
+    setCustomPatterns([{ id: 1, name: 'Tag', pattern: 'TAG-\\d{3}', enabled: true }]);
+    const out = maskCustom('First TAG-001 then again TAG-001');
+    const matches = out.match(/\[CUSTOM_TAG_\d+\]/g) || [];
+    assert(matches.length === 2, 'two tokens');
+    assert(matches[0] === matches[1], 'same value → same token');
+    resetCustom();
+});
+
+test('empty custom_patterns array — no masking, no crash', () => {
+    setCustomPatterns([]);
+    const out = maskCustom('nothing to mask here EMP-99999');
+    assert(out.includes('EMP-99999'), 'no custom patterns, text unchanged');
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');

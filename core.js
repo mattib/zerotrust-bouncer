@@ -236,11 +236,47 @@ window.ZeroTrust = window.ZeroTrust || {
             });
         }
 
+        // User-defined custom patterns
+        const customResult = window.ZeroTrust._runCustomPatterns(newText);
+        newText = customResult.text;
+        if (customResult.modified) modified = true;
+
         if (modified) {
             window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapUpdate', { detail: JSON.stringify(window.ZeroTrust.piiMap) }));
         }
 
         return newText;
+    },
+
+    // Runs all enabled user-defined custom patterns against text.
+    // Returns { text, modified } — caller handles the MapUpdate dispatch.
+    _runCustomPatterns: function(text) {
+        const patterns = window.ZeroTrust.config.custom_patterns;
+        if (!Array.isArray(patterns) || !patterns.length) return { text, modified: false };
+
+        let result = text;
+        let modified = false;
+
+        for (const cp of patterns) {
+            if (!cp.enabled) continue;
+            let regex;
+            try { regex = new RegExp(cp.pattern, 'g'); } catch (e) { continue; }
+
+            // Token base: CUSTOM_ + sanitized name (uppercase, non-alphanumeric → underscore)
+            const tokenBase = 'CUSTOM_' + cp.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+            result = result.replace(regex, (match) => {
+                const existing = Object.keys(window.ZeroTrust.piiMap).find(k => window.ZeroTrust.piiMap[k] === match);
+                if (existing) return existing;
+                window.ZeroTrust.piiCounters[tokenBase] = (window.ZeroTrust.piiCounters[tokenBase] || 0) + 1;
+                const token = `[${tokenBase}_${window.ZeroTrust.piiCounters[tokenBase]}]`;
+                window.ZeroTrust.piiMap[token] = match;
+                modified = true;
+                return token;
+            });
+        }
+
+        return { text: result, modified };
     },
 
     // Builds a combined regex from all currently-enabled API_KEY_DEFS entries.
