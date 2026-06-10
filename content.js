@@ -9,8 +9,31 @@ window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_InitLogger', {
 }));
 
 const defaultSettings = {
+    // Providers
+    provider_chatgpt: true, provider_claude: true, provider_gemini: true,
+    // PII types
     pii_email: true, pii_phone: true, pii_id: true,
-    provider_chatgpt: true, provider_claude: true, provider_gemini: true
+    pii_phone_il_landline: true, pii_phone_intl: true,
+    pii_passport_il: true, pii_company_il: true, pii_vat_il: true,
+    pii_ssn_us: true, pii_ni_uk: true, pii_plate_il: true,
+    pii_ipv4: true, pii_ipv6: true, pii_mac: true, pii_url_creds: true,
+    // API Keys — master toggle + per-service
+    pii_api_key: true,
+    api_key_anthropic: true, api_key_openai: true, api_key_aws: true,
+    api_key_github_pat: true, api_key_github_oauth: true, api_key_github_app: true, api_key_github_fine: true,
+    api_key_google: true, api_key_slack_bot: true, api_key_slack_user: true,
+    api_key_stripe: true, api_key_sendgrid: true, api_key_twilio: true, api_key_mailgun: true,
+    api_key_shopify: true, api_key_square: true,
+    api_key_digitalocean: true, api_key_do_spaces: true, api_key_do_registry: true,
+    api_key_newrelic: true, api_key_grafana: true, api_key_jwt: true, api_key_private_key: true,
+    api_key_alibaba: true, api_key_artifactory: true, api_key_atlassian: true, api_key_atlassian_pat: true,
+    api_key_datadog: true, api_key_dropbox: true, api_key_duffel: true, api_key_dynatrace: true,
+    api_key_easypost: true, api_key_facebook: true, api_key_flutterwave: true, api_key_fio: true,
+    api_key_heroku: true, api_key_hubspot: true, api_key_linear: true, api_key_netlify: true,
+    api_key_notion: true, api_key_npm: true, api_key_opsgenie: true, api_key_planetscale: true,
+    api_key_postman: true, api_key_prefect: true, api_key_pulumi: true, api_key_rubygems: true,
+    api_key_scalingo: true, api_key_segment: true, api_key_snyk: true, api_key_supabase: true,
+    api_key_telegram_bot: true, api_key_vercel: true, api_key_bearer: true
 };
 
 chrome.storage.local.get(defaultSettings, (settings) => {
@@ -220,10 +243,83 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">Claude</span><label class="switch"><input type="checkbox" id="tgl-provider_claude" ${initialSettings.provider_claude ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Gemini</span><label class="switch"><input type="checkbox" id="tgl-provider_gemini" ${initialSettings.provider_gemini ? 'checked' : ''}><span class="slider"></span></label></div>
                 
-                <div class="section-title">PII Types</div>
+                <div class="section-title">Phones</div>
+                <div class="toggle-row"><span class="toggle-label">Israeli Mobile (05X)</span><label class="switch"><input type="checkbox" id="tgl-pii_phone" ${initialSettings.pii_phone ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">IL Landline (0X-XXXXXXX)</span><label class="switch"><input type="checkbox" id="tgl-pii_phone_il_landline" ${initialSettings.pii_phone_il_landline ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">International (+CC…)</span><label class="switch"><input type="checkbox" id="tgl-pii_phone_intl" ${initialSettings.pii_phone_intl ? 'checked' : ''}><span class="slider"></span></label></div>
+
+                <div class="section-title">Identity</div>
                 <div class="toggle-row"><span class="toggle-label">Emails</span><label class="switch"><input type="checkbox" id="tgl-pii_email" ${initialSettings.pii_email ? 'checked' : ''}><span class="slider"></span></label></div>
-                <div class="toggle-row"><span class="toggle-label">Phone Numbers</span><label class="switch"><input type="checkbox" id="tgl-pii_phone" ${initialSettings.pii_phone ? 'checked' : ''}><span class="slider"></span></label></div>
-                <div class="toggle-row"><span class="toggle-label">ID Numbers</span><label class="switch"><input type="checkbox" id="tgl-pii_id" ${initialSettings.pii_id ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Israeli ID (ת"ז)</span><label class="switch"><input type="checkbox" id="tgl-pii_id" ${initialSettings.pii_id ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Israeli Passport</span><label class="switch"><input type="checkbox" id="tgl-pii_passport_il" ${initialSettings.pii_passport_il ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Company Reg. (ח"פ)</span><label class="switch"><input type="checkbox" id="tgl-pii_company_il" ${initialSettings.pii_company_il ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">VAT / עוסק מורשה</span><label class="switch"><input type="checkbox" id="tgl-pii_vat_il" ${initialSettings.pii_vat_il ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">US SSN</span><label class="switch"><input type="checkbox" id="tgl-pii_ssn_us" ${initialSettings.pii_ssn_us ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">UK NI Number</span><label class="switch"><input type="checkbox" id="tgl-pii_ni_uk" ${initialSettings.pii_ni_uk ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">IL Vehicle Plate</span><label class="switch"><input type="checkbox" id="tgl-pii_plate_il" ${initialSettings.pii_plate_il ? 'checked' : ''}><span class="slider"></span></label></div>
+
+                <div class="section-title">Network</div>
+                <div class="toggle-row"><span class="toggle-label">IPv4 Address</span><label class="switch"><input type="checkbox" id="tgl-pii_ipv4" ${initialSettings.pii_ipv4 ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">IPv6 Address</span><label class="switch"><input type="checkbox" id="tgl-pii_ipv6" ${initialSettings.pii_ipv6 ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">MAC Address</span><label class="switch"><input type="checkbox" id="tgl-pii_mac" ${initialSettings.pii_mac ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">URL with Credentials</span><label class="switch"><input type="checkbox" id="tgl-pii_url_creds" ${initialSettings.pii_url_creds ? 'checked' : ''}><span class="slider"></span></label></div>
+
+                <div class="section-title">API Keys</div>
+                <div class="toggle-row"><span class="toggle-label" style="font-weight:600">All API Keys (master)</span><label class="switch"><input type="checkbox" id="tgl-pii_api_key" ${initialSettings.pii_api_key ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Anthropic</span><label class="switch"><input type="checkbox" id="tgl-api_key_anthropic" ${initialSettings.api_key_anthropic ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">OpenAI</span><label class="switch"><input type="checkbox" id="tgl-api_key_openai" ${initialSettings.api_key_openai ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">AWS</span><label class="switch"><input type="checkbox" id="tgl-api_key_aws" ${initialSettings.api_key_aws ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">GitHub PAT</span><label class="switch"><input type="checkbox" id="tgl-api_key_github_pat" ${initialSettings.api_key_github_pat ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">GitHub OAuth</span><label class="switch"><input type="checkbox" id="tgl-api_key_github_oauth" ${initialSettings.api_key_github_oauth ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">GitHub App</span><label class="switch"><input type="checkbox" id="tgl-api_key_github_app" ${initialSettings.api_key_github_app ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">GitHub Fine-grained</span><label class="switch"><input type="checkbox" id="tgl-api_key_github_fine" ${initialSettings.api_key_github_fine ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Google</span><label class="switch"><input type="checkbox" id="tgl-api_key_google" ${initialSettings.api_key_google ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Slack Bot</span><label class="switch"><input type="checkbox" id="tgl-api_key_slack_bot" ${initialSettings.api_key_slack_bot ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Slack User</span><label class="switch"><input type="checkbox" id="tgl-api_key_slack_user" ${initialSettings.api_key_slack_user ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Stripe</span><label class="switch"><input type="checkbox" id="tgl-api_key_stripe" ${initialSettings.api_key_stripe ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">SendGrid</span><label class="switch"><input type="checkbox" id="tgl-api_key_sendgrid" ${initialSettings.api_key_sendgrid ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Twilio</span><label class="switch"><input type="checkbox" id="tgl-api_key_twilio" ${initialSettings.api_key_twilio ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Mailgun</span><label class="switch"><input type="checkbox" id="tgl-api_key_mailgun" ${initialSettings.api_key_mailgun ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Shopify</span><label class="switch"><input type="checkbox" id="tgl-api_key_shopify" ${initialSettings.api_key_shopify ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Square</span><label class="switch"><input type="checkbox" id="tgl-api_key_square" ${initialSettings.api_key_square ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">DigitalOcean</span><label class="switch"><input type="checkbox" id="tgl-api_key_digitalocean" ${initialSettings.api_key_digitalocean ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">DO Spaces</span><label class="switch"><input type="checkbox" id="tgl-api_key_do_spaces" ${initialSettings.api_key_do_spaces ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">DO Registry</span><label class="switch"><input type="checkbox" id="tgl-api_key_do_registry" ${initialSettings.api_key_do_registry ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">New Relic</span><label class="switch"><input type="checkbox" id="tgl-api_key_newrelic" ${initialSettings.api_key_newrelic ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Grafana</span><label class="switch"><input type="checkbox" id="tgl-api_key_grafana" ${initialSettings.api_key_grafana ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">JWT</span><label class="switch"><input type="checkbox" id="tgl-api_key_jwt" ${initialSettings.api_key_jwt ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Private Key (PEM)</span><label class="switch"><input type="checkbox" id="tgl-api_key_private_key" ${initialSettings.api_key_private_key ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Alibaba Cloud</span><label class="switch"><input type="checkbox" id="tgl-api_key_alibaba" ${initialSettings.api_key_alibaba ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Artifactory</span><label class="switch"><input type="checkbox" id="tgl-api_key_artifactory" ${initialSettings.api_key_artifactory ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Atlassian API</span><label class="switch"><input type="checkbox" id="tgl-api_key_atlassian" ${initialSettings.api_key_atlassian ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Atlassian PAT</span><label class="switch"><input type="checkbox" id="tgl-api_key_atlassian_pat" ${initialSettings.api_key_atlassian_pat ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Datadog</span><label class="switch"><input type="checkbox" id="tgl-api_key_datadog" ${initialSettings.api_key_datadog ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Dropbox</span><label class="switch"><input type="checkbox" id="tgl-api_key_dropbox" ${initialSettings.api_key_dropbox ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Duffel</span><label class="switch"><input type="checkbox" id="tgl-api_key_duffel" ${initialSettings.api_key_duffel ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Dynatrace</span><label class="switch"><input type="checkbox" id="tgl-api_key_dynatrace" ${initialSettings.api_key_dynatrace ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">EasyPost</span><label class="switch"><input type="checkbox" id="tgl-api_key_easypost" ${initialSettings.api_key_easypost ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Facebook</span><label class="switch"><input type="checkbox" id="tgl-api_key_facebook" ${initialSettings.api_key_facebook ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Flutterwave</span><label class="switch"><input type="checkbox" id="tgl-api_key_flutterwave" ${initialSettings.api_key_flutterwave ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Fio Bank</span><label class="switch"><input type="checkbox" id="tgl-api_key_fio" ${initialSettings.api_key_fio ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Heroku</span><label class="switch"><input type="checkbox" id="tgl-api_key_heroku" ${initialSettings.api_key_heroku ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">HubSpot</span><label class="switch"><input type="checkbox" id="tgl-api_key_hubspot" ${initialSettings.api_key_hubspot ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Linear</span><label class="switch"><input type="checkbox" id="tgl-api_key_linear" ${initialSettings.api_key_linear ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Netlify</span><label class="switch"><input type="checkbox" id="tgl-api_key_netlify" ${initialSettings.api_key_netlify ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Notion</span><label class="switch"><input type="checkbox" id="tgl-api_key_notion" ${initialSettings.api_key_notion ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">npm</span><label class="switch"><input type="checkbox" id="tgl-api_key_npm" ${initialSettings.api_key_npm ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">OpsGenie</span><label class="switch"><input type="checkbox" id="tgl-api_key_opsgenie" ${initialSettings.api_key_opsgenie ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">PlanetScale</span><label class="switch"><input type="checkbox" id="tgl-api_key_planetscale" ${initialSettings.api_key_planetscale ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Postman</span><label class="switch"><input type="checkbox" id="tgl-api_key_postman" ${initialSettings.api_key_postman ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Prefect</span><label class="switch"><input type="checkbox" id="tgl-api_key_prefect" ${initialSettings.api_key_prefect ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Pulumi</span><label class="switch"><input type="checkbox" id="tgl-api_key_pulumi" ${initialSettings.api_key_pulumi ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">RubyGems</span><label class="switch"><input type="checkbox" id="tgl-api_key_rubygems" ${initialSettings.api_key_rubygems ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Scalingo</span><label class="switch"><input type="checkbox" id="tgl-api_key_scalingo" ${initialSettings.api_key_scalingo ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Segment</span><label class="switch"><input type="checkbox" id="tgl-api_key_segment" ${initialSettings.api_key_segment ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Snyk</span><label class="switch"><input type="checkbox" id="tgl-api_key_snyk" ${initialSettings.api_key_snyk ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Supabase</span><label class="switch"><input type="checkbox" id="tgl-api_key_supabase" ${initialSettings.api_key_supabase ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Telegram Bot</span><label class="switch"><input type="checkbox" id="tgl-api_key_telegram_bot" ${initialSettings.api_key_telegram_bot ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Vercel</span><label class="switch"><input type="checkbox" id="tgl-api_key_vercel" ${initialSettings.api_key_vercel ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Bearer Token</span><label class="switch"><input type="checkbox" id="tgl-api_key_bearer" ${initialSettings.api_key_bearer ? 'checked' : ''}><span class="slider"></span></label></div>
             </div>
         </div>
     `;
@@ -259,7 +355,33 @@ function injectFloatingWidget(initialSettings) {
     });
 
     // Toggle Listeners
-    const toggleIds = ['provider_chatgpt', 'provider_claude', 'provider_gemini', 'pii_email', 'pii_phone', 'pii_id'];
+    const toggleIds = [
+        // Providers
+        'provider_chatgpt', 'provider_claude', 'provider_gemini',
+        // Phones
+        'pii_phone', 'pii_phone_il_landline', 'pii_phone_intl',
+        // Identity
+        'pii_email', 'pii_id', 'pii_passport_il', 'pii_company_il', 'pii_vat_il', 'pii_ssn_us', 'pii_ni_uk', 'pii_plate_il',
+        // Network
+        'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds',
+        // API Keys — master + per-service
+        'pii_api_key',
+        'api_key_anthropic', 'api_key_openai', 'api_key_aws',
+        'api_key_github_pat', 'api_key_github_oauth', 'api_key_github_app', 'api_key_github_fine',
+        'api_key_google', 'api_key_slack_bot', 'api_key_slack_user',
+        'api_key_stripe', 'api_key_sendgrid', 'api_key_twilio', 'api_key_mailgun',
+        'api_key_shopify', 'api_key_square',
+        'api_key_digitalocean', 'api_key_do_spaces', 'api_key_do_registry',
+        'api_key_newrelic', 'api_key_grafana', 'api_key_jwt', 'api_key_private_key',
+        'api_key_alibaba', 'api_key_artifactory', 'api_key_atlassian', 'api_key_atlassian_pat',
+        'api_key_datadog', 'api_key_dropbox', 'api_key_duffel', 'api_key_dynatrace',
+        'api_key_easypost', 'api_key_facebook', 'api_key_flutterwave', 'api_key_fio',
+        'api_key_heroku', 'api_key_hubspot', 'api_key_linear', 'api_key_netlify',
+        'api_key_notion', 'api_key_npm', 'api_key_opsgenie', 'api_key_planetscale',
+        'api_key_postman', 'api_key_prefect', 'api_key_pulumi', 'api_key_rubygems',
+        'api_key_scalingo', 'api_key_segment', 'api_key_snyk', 'api_key_supabase',
+        'api_key_telegram_bot', 'api_key_vercel', 'api_key_bearer'
+    ];
     toggleIds.forEach(id => {
         const tgl = panel.querySelector('#tgl-' + id);
         if (tgl) {
