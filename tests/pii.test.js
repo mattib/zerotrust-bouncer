@@ -80,6 +80,26 @@ function assert(condition, message) {
 }
 
 // ---------------------------------------------------------------------------
+// PHONE — Israeli mobile (05X), tolerant of dash/space separators
+// ---------------------------------------------------------------------------
+console.log('\n--- PHONE (IL mobile) ---');
+test('mobile 10 digits, no separator', () => {
+    assert(maskContains('0501234567', 'PHONE'));
+});
+test('mobile with single dash 050-1234567', () => {
+    assert(maskContains('050-1234567', 'PHONE'));
+});
+test('mobile grouped 050-123-4567', () => {
+    assert(maskContains('050-123-4567', 'PHONE'));
+});
+test('mobile spaced inside a sentence', () => {
+    assert(maskContains('call me at 052 999 8888 ok', 'PHONE'));
+});
+test('mobile intl form +972-50-123-4567', () => {
+    assert(maskContains('+972-50-123-4567', 'PHONE'));
+});
+
+// ---------------------------------------------------------------------------
 // PHONE_IL_LANDLINE — 02/03/04/08/09 prefixes, optional dash, 7 trailing digits
 // ---------------------------------------------------------------------------
 console.log('\n--- PHONE_IL_LANDLINE ---');

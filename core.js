@@ -173,7 +173,7 @@ window.ZeroTrust = window.ZeroTrust || {
 
         // Existing broad patterns
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
-        { type: "PHONE", regex: /(?:05\d-?\d{7})|(?:\+972-?5\d-?\d{7})/g },
+        { type: "PHONE", regex: /(?<!\d)(?:05\d|\+972-?5\d)(?:[-\s]?\d){7}(?!\d)/g },
         { type: "ID", regex: /\b\d{9}\b/g },
 
         // International phone E.164 (exclude +972 already handled)
