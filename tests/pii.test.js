@@ -852,6 +852,42 @@ test('empty custom_patterns array — no masking, no crash', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Masked-count badge event (ZeroTrustBouncer_MaskedCount → shield badge)
+// ---------------------------------------------------------------------------
+let lastMaskedCount = null;
+window.addEventListener('ZeroTrustBouncer_MaskedCount', (e) => { lastMaskedCount = parseInt(e.detail); });
+
+function maskCount(input) {
+    window.ZeroTrust.piiMap = {};
+    window.ZeroTrust.piiCounters = {};
+    for (const rule of window.ZeroTrust.PII_REGEXES) { if (rule.regex) rule.regex.lastIndex = 0; }
+    lastMaskedCount = null;
+    window.ZeroTrust.maskText(input);
+    return lastMaskedCount;
+}
+
+test('masked count — reports number of items masked', () => {
+    setCustomPatterns([{ id: 1, name: 'Code', pattern: 'CODE-\\d+', enabled: true }]);
+    const n = maskCount('First CODE-001 then CODE-002');
+    assert(n === 2, 'two distinct items → count 2 (got ' + n + ')');
+    resetCustom();
+});
+
+test('masked count — counts repeats of the same value', () => {
+    setCustomPatterns([{ id: 1, name: 'Tag', pattern: 'TAG-\\d{3}', enabled: true }]);
+    const n = maskCount('TAG-001 and again TAG-001');
+    assert(n === 2, 'same value twice → count 2 (got ' + n + ')');
+    resetCustom();
+});
+
+test('masked count — zero when nothing is masked', () => {
+    setCustomPatterns([{ id: 1, name: 'Code', pattern: 'CODE-\\d+', enabled: true }]);
+    const n = maskCount('a clean sentence with nothing to mask');
+    assert(n === 0, 'clean text → count 0 (got ' + n + ')');
+    resetCustom();
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');
