@@ -136,6 +136,23 @@ window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     }
 });
 
+// Update the shield badge with the number of items masked in the last sent message.
+window.addEventListener('ZeroTrustBouncer_MaskedCount', (e) => {
+    try {
+        const count = parseInt(e.detail) || 0;
+        const container = document.getElementById('zerotrust-bouncer-widget-container');
+        if (!container || !container.shadowRoot) return;
+        const badge = container.shadowRoot.querySelector('#zt-mask-badge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (err) {}
+});
+
 function unmaskNode(node) {
     if (Object.keys(piiMap).length === 0) return;
 
@@ -253,9 +270,10 @@ function injectFloatingWidget(initialSettings) {
             100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
         
-        .shield-button { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
+        .shield-button { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; z-index: 10; border: 1px solid rgba(255,255,255,0.1); position: relative; }
         .shield-button:hover { transform: scale(1.08); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
         .shield-button.active { animation: shield-pulse 1.5s infinite; }
+        .shield-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: none; pointer-events: none; }
         .shield-icon { width: 22px; height: 22px; fill: white; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
         
         .panel { position: absolute; top: 54px; right: 0; width: 220px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid rgba(229, 231, 235, 0.5); opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.98); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; transform-origin: top right; }
@@ -355,7 +373,7 @@ function injectFloatingWidget(initialSettings) {
 
     const button = document.createElement('div');
     button.className = 'shield-button';
-    button.innerHTML = '<svg class="shield-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>';
+    button.innerHTML = '<svg class="shield-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span class="shield-badge" id="zt-mask-badge"></span>';
 
     const panel = document.createElement('div');
     panel.className = 'panel';

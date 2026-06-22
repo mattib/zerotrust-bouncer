@@ -230,6 +230,7 @@ window.ZeroTrust = window.ZeroTrust || {
     maskText: function(text) {
         let newText = text;
         let modified = false;
+        let maskedCount = 0;
 
         for (const rule of window.ZeroTrust.PII_REGEXES) {
             if (!rule.regex) continue; // Skip entries with null regex (e.g. API_KEY when all disabled)
@@ -240,6 +241,7 @@ window.ZeroTrust = window.ZeroTrust || {
                 // Per-rule validation (e.g. Luhn for credit cards) — skip if fails
                 if (rule.validate && !rule.validate(match)) return match;
 
+                maskedCount++;
                 let existingToken = Object.keys(window.ZeroTrust.piiMap).find(key => window.ZeroTrust.piiMap[key] === match);
                 if (existingToken) return existingToken;
 
@@ -254,10 +256,14 @@ window.ZeroTrust = window.ZeroTrust || {
         const customResult = window.ZeroTrust._runCustomPatterns(newText);
         newText = customResult.text;
         if (customResult.modified) modified = true;
+        maskedCount += customResult.count || 0;
 
         if (modified) {
             window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapUpdate', { detail: JSON.stringify(window.ZeroTrust.piiMap) }));
         }
+
+        // Tell the UI how many items we masked in this message (for the shield badge)
+        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MaskedCount', { detail: String(maskedCount) }));
 
         return newText;
     },
@@ -266,10 +272,11 @@ window.ZeroTrust = window.ZeroTrust || {
     // Returns { text, modified } — caller handles the MapUpdate dispatch.
     _runCustomPatterns: function(text) {
         const patterns = window.ZeroTrust.config.custom_patterns;
-        if (!Array.isArray(patterns) || !patterns.length) return { text, modified: false };
+        if (!Array.isArray(patterns) || !patterns.length) return { text, modified: false, count: 0 };
 
         let result = text;
         let modified = false;
+        let count = 0;
 
         for (const cp of patterns) {
             if (!cp.enabled) continue;
@@ -280,6 +287,7 @@ window.ZeroTrust = window.ZeroTrust || {
             const tokenBase = 'CUSTOM_' + cp.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 
             result = result.replace(regex, (match) => {
+                count++;
                 const existing = Object.keys(window.ZeroTrust.piiMap).find(k => window.ZeroTrust.piiMap[k] === match);
                 if (existing) return existing;
                 const token = window.ZeroTrust._makeToken(tokenBase);
@@ -289,7 +297,7 @@ window.ZeroTrust = window.ZeroTrust || {
             });
         }
 
-        return { text: result, modified };
+        return { text: result, modified, count };
     },
 
     // Builds a combined regex from all currently-enabled API_KEY_DEFS entries.
