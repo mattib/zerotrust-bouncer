@@ -212,6 +212,21 @@ window.ZeroTrust = window.ZeroTrust || {
         return sum % 10 === 0;
     },
 
+    // Generate a short random id (6 lowercase alphanumeric chars) for masking tokens.
+    _shortId: function() {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let s = '';
+        for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+        return s;
+    },
+
+    // Build a unique token like [TYPE_a3f9c2]; regenerates on the rare collision.
+    _makeToken: function(typeBase) {
+        let token;
+        do { token = `[${typeBase}_${window.ZeroTrust._shortId()}]`; } while (window.ZeroTrust.piiMap[token] !== undefined);
+        return token;
+    },
+
     maskText: function(text) {
         let newText = text;
         let modified = false;
@@ -228,8 +243,7 @@ window.ZeroTrust = window.ZeroTrust || {
                 let existingToken = Object.keys(window.ZeroTrust.piiMap).find(key => window.ZeroTrust.piiMap[key] === match);
                 if (existingToken) return existingToken;
 
-                window.ZeroTrust.piiCounters[rule.type] = (window.ZeroTrust.piiCounters[rule.type] || 0) + 1;
-                const token = `[${rule.type}_${window.ZeroTrust.piiCounters[rule.type]}]`;
+                const token = window.ZeroTrust._makeToken(rule.type);
                 window.ZeroTrust.piiMap[token] = match;
                 modified = true;
                 return token;
@@ -268,8 +282,7 @@ window.ZeroTrust = window.ZeroTrust || {
             result = result.replace(regex, (match) => {
                 const existing = Object.keys(window.ZeroTrust.piiMap).find(k => window.ZeroTrust.piiMap[k] === match);
                 if (existing) return existing;
-                window.ZeroTrust.piiCounters[tokenBase] = (window.ZeroTrust.piiCounters[tokenBase] || 0) + 1;
-                const token = `[${tokenBase}_${window.ZeroTrust.piiCounters[tokenBase]}]`;
+                const token = window.ZeroTrust._makeToken(tokenBase);
                 window.ZeroTrust.piiMap[token] = match;
                 modified = true;
                 return token;
@@ -355,6 +368,15 @@ window.addEventListener('ZeroTrustBouncer_MapClear', () => {
     window.ZeroTrust.piiMap     = {};
     window.ZeroTrust.piiCounters = {};
     window.ZeroTrust.log("Map cleared by user.");
+});
+
+// Replace the engine's map with an authoritative (trimmed) map from the content script —
+// keeps both copies in sync after FIFO eviction, with no page refresh needed.
+window.addEventListener('ZeroTrustBouncer_MapSync', (e) => {
+    try {
+        window.ZeroTrust.piiMap = JSON.parse(e.detail);
+        window.ZeroTrust.log("Map synced (trimmed):", Object.keys(window.ZeroTrust.piiMap).length, "entries");
+    } catch (err) {}
 });
 
 if (navigator.clipboard && navigator.clipboard.writeText) {

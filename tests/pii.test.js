@@ -794,7 +794,7 @@ function maskCustom(input) {
 test('basic custom pattern matches', () => {
     setCustomPatterns([{ id: 1, name: 'Employee ID', pattern: 'EMP-\\d{5}', enabled: true }]);
     const out = maskCustom('My ID is EMP-12345 thanks');
-    assert(out.includes('[CUSTOM_EMPLOYEE_ID_1]'), 'should mask EMP-12345 as CUSTOM_EMPLOYEE_ID_1');
+    assert(/\[CUSTOM_EMPLOYEE_ID_[a-z0-9]+\]/.test(out), 'should mask EMP-12345 as a CUSTOM_EMPLOYEE_ID token');
     assert(!out.includes('EMP-12345'), 'raw value should not appear');
     resetCustom();
 });
@@ -812,8 +812,8 @@ test('multiple custom patterns in one text', () => {
         { id: 2, name: 'Project', pattern: 'PROJ-[A-Z]{2}\\d{3}', enabled: true }
     ]);
     const out = maskCustom('Employee EMP-12345 on project PROJ-AB123');
-    assert(out.includes('[CUSTOM_EMP_ID_1]'), 'should mask employee id');
-    assert(out.includes('[CUSTOM_PROJECT_1]'), 'should mask project code');
+    assert(/\[CUSTOM_EMP_ID_[a-z0-9]+\]/.test(out), 'should mask employee id');
+    assert(/\[CUSTOM_PROJECT_[a-z0-9]+\]/.test(out), 'should mask project code');
     assert(!out.includes('EMP-12345'), 'raw emp id gone');
     assert(!out.includes('PROJ-AB123'), 'raw project code gone');
     resetCustom();
@@ -827,18 +827,19 @@ test('invalid regex in custom pattern is silently skipped', () => {
     resetCustom();
 });
 
-test('custom pattern counter increments per occurrence', () => {
+test('different values get different tokens', () => {
     setCustomPatterns([{ id: 1, name: 'Code', pattern: 'CODE-\\d+', enabled: true }]);
     const out = maskCustom('First CODE-001 then CODE-002');
-    assert(out.includes('[CUSTOM_CODE_1]'), 'first occurrence');
-    assert(out.includes('[CUSTOM_CODE_2]'), 'second occurrence');
+    const matches = out.match(/\[CUSTOM_CODE_[a-z0-9]+\]/g) || [];
+    assert(matches.length === 2, 'two tokens produced');
+    assert(matches[0] !== matches[1], 'different values → different tokens');
     resetCustom();
 });
 
 test('same value masked to same token (no duplicates)', () => {
     setCustomPatterns([{ id: 1, name: 'Tag', pattern: 'TAG-\\d{3}', enabled: true }]);
     const out = maskCustom('First TAG-001 then again TAG-001');
-    const matches = out.match(/\[CUSTOM_TAG_\d+\]/g) || [];
+    const matches = out.match(/\[CUSTOM_TAG_[a-z0-9]+\]/g) || [];
     assert(matches.length === 2, 'two tokens');
     assert(matches[0] === matches[1], 'same value → same token');
     resetCustom();

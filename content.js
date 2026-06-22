@@ -106,8 +106,14 @@ window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
         Object.keys(newMap).forEach(k => { if (!known.has(k)) currentMapOrder.push(k); });
 
         // FIFO eviction — remove oldest entries until under limit
+        let evicted = false;
         while (currentMapOrder.length > currentMapMax) {
             delete newMap[currentMapOrder.shift()];
+            evicted = true;
+        }
+        // If we trimmed, hand the trimmed map back to the engine so both copies match (no refresh).
+        if (evicted) {
+            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapSync', { detail: JSON.stringify(newMap) }));
         }
 
         // Persist
@@ -716,6 +722,17 @@ function injectFloatingWidget(initialSettings) {
         mapMaxInput.value = val;
         currentMapMax = val;
         chrome.storage.local.set({ pii_map_max: val });
+
+        // Enforce the new cap immediately (so lowering it trims right away).
+        let evicted = false;
+        while (currentMapOrder.length > currentMapMax) {
+            delete piiMap[currentMapOrder.shift()];
+            evicted = true;
+        }
+        if (evicted) {
+            chrome.storage.local.set({ pii_map: piiMap, pii_map_order: currentMapOrder });
+            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapSync', { detail: JSON.stringify(piiMap) }));
+        }
         _updateMapCount();
     });
 
