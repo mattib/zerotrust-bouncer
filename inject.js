@@ -43,6 +43,7 @@ window.fetch = async function(...args) {
                     }
                     window.ZeroTrust.log(`Payload Masked Successfully! Forwarding...`);
                 }
+                window.ZeroTrust.flushMaskCount();
             }
         } catch(e) {
             console.error(window.ZeroTrust.logPrefix, "Error during masking", e);
@@ -77,6 +78,7 @@ XMLHttpRequest.prototype.send = function(body) {
                     window.ZeroTrust.log(`PII DETECTED in XHR! Masking payload for ${provider.name}...`);
                     body = maskedText;
                 }
+                window.ZeroTrust.flushMaskCount();
             }
         }
     } catch(e) {

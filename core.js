@@ -212,6 +212,16 @@ window.ZeroTrust = window.ZeroTrust || {
         return sum % 10 === 0;
     },
 
+    // Per-send masked-item total (accumulated across multiple maskText calls, e.g. Gemini's multi-part request).
+    _maskCountPending: 0,
+
+    // Fire the badge count once per send (summed across all maskText calls this send), then reset.
+    flushMaskCount: function() {
+        const n = window.ZeroTrust._maskCountPending || 0;
+        window.ZeroTrust._maskCountPending = 0;
+        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MaskedCount', { detail: String(n) }));
+    },
+
     // Generate a short random id (6 lowercase alphanumeric chars) for masking tokens.
     _shortId: function() {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -262,8 +272,9 @@ window.ZeroTrust = window.ZeroTrust || {
             window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapUpdate', { detail: JSON.stringify(window.ZeroTrust.piiMap) }));
         }
 
-        // Tell the UI how many items we masked in this message (for the shield badge)
-        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MaskedCount', { detail: String(maskedCount) }));
+        // Accumulate into the per-send total; the network interceptor flushes it once per send
+        // (so multi-part requests like Gemini's sum into one badge number instead of overwriting).
+        window.ZeroTrust._maskCountPending = (window.ZeroTrust._maskCountPending || 0) + maskedCount;
 
         return newText;
     },

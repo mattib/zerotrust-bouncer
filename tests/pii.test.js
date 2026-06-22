@@ -881,8 +881,10 @@ function maskCount(input) {
     window.ZeroTrust.piiMap = {};
     window.ZeroTrust.piiCounters = {};
     for (const rule of window.ZeroTrust.PII_REGEXES) { if (rule.regex) rule.regex.lastIndex = 0; }
+    window.ZeroTrust._maskCountPending = 0;
     lastMaskedCount = null;
     window.ZeroTrust.maskText(input);
+    window.ZeroTrust.flushMaskCount();
     return lastMaskedCount;
 }
 
@@ -904,6 +906,20 @@ test('masked count — zero when nothing is masked', () => {
     setCustomPatterns([{ id: 1, name: 'Code', pattern: 'CODE-\\d+', enabled: true }]);
     const n = maskCount('a clean sentence with nothing to mask');
     assert(n === 0, 'clean text → count 0 (got ' + n + ')');
+    resetCustom();
+});
+
+test('masked count — sums across multiple mask calls in one send (Gemini-style)', () => {
+    setCustomPatterns([{ id: 1, name: 'Code', pattern: 'CODE-\\d+', enabled: true }]);
+    window.ZeroTrust.piiMap = {};
+    window.ZeroTrust.piiCounters = {};
+    window.ZeroTrust._maskCountPending = 0;
+    for (const rule of window.ZeroTrust.PII_REGEXES) { if (rule.regex) rule.regex.lastIndex = 0; }
+    lastMaskedCount = null;
+    window.ZeroTrust.maskText('part one CODE-001');             // 1
+    window.ZeroTrust.maskText('part two CODE-002 and CODE-003'); // +2
+    window.ZeroTrust.flushMaskCount();                           // one flush for the whole send
+    assert(lastMaskedCount === 3, 'multi-call send sums to 3 (got ' + lastMaskedCount + ')');
     resetCustom();
 });
 
