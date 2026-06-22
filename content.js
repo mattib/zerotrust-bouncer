@@ -38,12 +38,46 @@ const defaultSettings = {
     api_key_telegram_bot: true, api_key_vercel: true, api_key_bearer: true
 };
 
+// ---------------------------------------------------------------------------
+// Map persistence state (module-level — populated before widget creation)
+// ---------------------------------------------------------------------------
+let currentMapOrder = [];   // insertion-order array of token keys (for FIFO eviction)
+let currentMapMax   = 1000; // max entries; oldest evicted when exceeded
+let _updateMapCount = () => {}; // set by injectFloatingWidget once panel exists
+
+// Derive piiCounters from a map — parse [TYPE_N] tokens to find max N per type
+function derivedCounters(map) {
+    const counters = {};
+    for (const token of Object.keys(map)) {
+        const m = token.match(/^\[(.+)_(\d+)\]$/);
+        if (m) {
+            const type = m[1], n = parseInt(m[2]);
+            if (!counters[type] || n > counters[type]) counters[type] = n;
+        }
+    }
+    return counters;
+}
+
 chrome.storage.local.get(defaultSettings, (settings) => {
     // Send initial config to core engine
     window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
         detail: JSON.stringify(settings)
     }));
-    injectFloatingWidget(settings);
+
+    // Load persisted PII map before creating widget (so count display is correct)
+    chrome.storage.local.get({ pii_map: {}, pii_counters: {}, pii_map_order: [], pii_map_max: 1000 }, (stored) => {
+        piiMap          = stored.pii_map       || {};
+        currentMapOrder = stored.pii_map_order || [];
+        currentMapMax   = stored.pii_map_max   || 1000;
+
+        if (Object.keys(piiMap).length > 0) {
+            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapRestore', {
+                detail: JSON.stringify({ piiMap: stored.pii_map, piiCounters: stored.pii_counters || {} })
+            }));
+        }
+
+        injectFloatingWidget(settings);
+    });
 });
 
 // Listen for live changes in other tabs or the UI
@@ -63,11 +97,36 @@ let piiMap = {};
 
 window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
     try {
-        piiMap = JSON.parse(e.detail);
-        ztLog("Received updated PII map!", piiMap);
+        const newMap = JSON.parse(e.detail);
+        piiMap = newMap;
         unmaskNode(document.body);
+
+        // Track new entries (keys not yet in order array)
+        const known = new Set(currentMapOrder);
+        Object.keys(newMap).forEach(k => { if (!known.has(k)) currentMapOrder.push(k); });
+
+        // FIFO eviction — remove oldest entries until under limit
+        while (currentMapOrder.length > currentMapMax) {
+            delete newMap[currentMapOrder.shift()];
+        }
+
+        // Persist
+        const counters = derivedCounters(newMap);
+        chrome.storage.local.set({ pii_map: newMap, pii_map_order: currentMapOrder, pii_counters: counters });
+        _updateMapCount();
+        
+        // Trigger pulse animation on the shield widget
+        const container = document.getElementById('zerotrust-bouncer-widget-container');
+        if (container && container.shadowRoot) {
+            const btn = container.shadowRoot.querySelector('.shield-button');
+            if (btn) {
+                btn.classList.add('active');
+                if (btn._pulseTimeout) clearTimeout(btn._pulseTimeout);
+                btn._pulseTimeout = setTimeout(() => btn.classList.remove('active'), 1500);
+            }
+        }
     } catch (err) {
-        console.error(ztPrefix, "Error parsing map", err);
+        console.error(ztPrefix, "Error handling MapUpdate", err);
     }
 });
 
@@ -181,56 +240,108 @@ function injectFloatingWidget(initialSettings) {
         :host { all: initial; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .widget-wrapper { position: relative; pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; }
-        .shield-button { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease, box-shadow 0.2s ease; z-index: 10; }
-        .shield-button:hover { transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .shield-icon { width: 22px; height: 22px; fill: white; }
-        .panel { position: absolute; top: 54px; right: 0; width: 220px; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); border: 1px solid #e5e7eb; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
-        .widget-wrapper:hover .panel { opacity: 1; visibility: visible; transform: translateY(0); }
-        .panel-header { background: #f9fafb; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; }
+        
+        @keyframes shield-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        .shield-button { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
+        .shield-button:hover { transform: scale(1.08); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .shield-button.active { animation: shield-pulse 1.5s infinite; }
+        .shield-icon { width: 22px; height: 22px; fill: white; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+        
+        .panel { position: absolute; top: 54px; right: 0; width: 220px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid rgba(229, 231, 235, 0.5); opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.98); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; transform-origin: top right; }
+        .widget-wrapper:hover .panel { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        
+        .panel-header { background: rgba(249, 250, 251, 0.5); padding: 12px 16px; border-bottom: 1px solid rgba(229, 231, 235, 0.5); display: flex; align-items: center; }
         .panel-title { margin: 0; font-size: 14px; font-weight: 600; color: #111827; }
         .panel-version { margin: 0; font-size: 12px; color: #6b7280; margin-top: 2px; }
         .panel-body { padding: 8px; }
-        .panel-btn { display: block; width: 100%; text-align: left; padding: 10px 12px; margin: 2px 0; background: none; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
-        .panel-btn:hover { background: #f3f4f6; color: #111827; }
+        .panel-btn { display: block; width: 100%; text-align: left; padding: 10px 12px; margin: 2px 0; background: none; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.2s ease; }
+        .panel-btn:hover { background: rgba(0, 0, 0, 0.04); color: #111827; transform: translateX(2px); }
         .panel-btn svg { width: 16px; height: 16px; margin-right: 10px; vertical-align: text-bottom; fill: currentColor; opacity: 0.7; }
         
         /* Toggle Switch CSS */
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 2px; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 2px; border-radius: 8px; transition: background 0.2s ease; }
+        .toggle-row:hover { background: rgba(0, 0, 0, 0.02); }
         .toggle-label { font-size: 13px; font-weight: 500; color: #374151; }
         .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; transition: .3s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(14px); }
-        .section-title { font-size: 11px; text-transform: uppercase; color: #9ca3af; margin: 12px 12px 4px 12px; letter-spacing: 0.5px; font-weight: 600;}
+        .section-title { font-size: 11px; text-transform: uppercase; color: #9ca3af; margin: 12px 12px 4px 12px; letter-spacing: 0.8px; font-weight: 700;}
         
         #view-options { display: none; }
         #view-pii { display: none; }
         #view-api-keys { display: none; }
-        .btn-back { background: none; border: none; cursor: pointer; padding: 0; margin-right: 8px; display: flex; align-items: center; color: #6b7280; }
+        .btn-back { background: none; border: none; cursor: pointer; padding: 0; margin-right: 8px; display: flex; align-items: center; color: #6b7280; transition: color 0.2s; }
         .btn-back:hover { color: #111827; }
         .btn-back svg { width: 18px; height: 18px; fill: currentColor; }
-        .sub-panel-body { max-height: 300px; overflow-y: auto; padding: 0 0 8px 0; }
+        .sub-panel-body { max-height: 320px; overflow-y: auto; padding: 0 0 8px 0; }
+        /* Scrollbar styles */
+        .sub-panel-body::-webkit-scrollbar { width: 4px; }
+        .sub-panel-body::-webkit-scrollbar-track { background: transparent; }
+        .sub-panel-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .sub-panel-body::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+        
         .customize-row { text-align: right; padding: 0 12px 6px 12px; }
-        .customize-link { font-size: 11px; color: #10b981; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
-        .customize-link:hover { text-decoration: underline; }
+        .customize-link { font-size: 11px; color: #10b981; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; font-weight: 600; transition: color 0.2s; }
+        .customize-link:hover { text-decoration: underline; color: #059669; }
         #view-custom-patterns { display: none; }
-        .custom-form { padding: 8px 12px 10px; border-bottom: 1px solid #e5e7eb; }
-        .custom-input { width: 100%; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; outline: none; box-sizing: border-box; font-family: inherit; margin-top: 4px; }
-        .custom-input:focus { border-color: #10b981; }
+        .custom-form { padding: 8px 12px 10px; border-bottom: 1px solid rgba(229, 231, 235, 0.5); }
+        .custom-input { width: 100%; padding: 6px 10px; border: 1px solid rgba(209, 213, 219, 0.8); border-radius: 6px; font-size: 12px; outline: none; box-sizing: border-box; font-family: inherit; margin-top: 4px; transition: border-color 0.2s, box-shadow 0.2s; background: rgba(255,255,255,0.8); }
+        .custom-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.1); }
         .custom-input-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
         .custom-error { font-size: 11px; color: #ef4444; min-height: 14px; margin-top: 2px; }
-        .regex-help { font-size: 11px; color: #9ca3af; text-decoration: none; width: 18px; height: 18px; border: 1px solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .regex-help:hover { color: #10b981; border-color: #10b981; }
-        .custom-add-btn { margin-top: 8px; width: 100%; padding: 6px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .regex-help { font-size: 11px; color: #9ca3af; text-decoration: none; width: 18px; height: 18px; border: 1px solid rgba(209, 213, 219, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .regex-help:hover { color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.05); }
+        .custom-add-btn { margin-top: 8px; width: 100%; padding: 8px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; }
         .custom-add-btn:hover { background: #059669; }
         .custom-empty { padding: 14px 12px; text-align: center; font-size: 12px; color: #9ca3af; }
-        .custom-item { padding: 7px 12px; border-top: 1px solid #f3f4f6; }
+        .custom-item { padding: 8px 12px; border-top: 1px solid rgba(243, 244, 246, 0.5); }
         .custom-item-header { display: flex; justify-content: space-between; align-items: center; }
-        .custom-item-pattern { font-size: 11px; color: #6b7280; font-family: monospace; margin-top: 2px; word-break: break-all; }
-        .custom-delete { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 13px; padding: 0 2px; line-height: 1; }
+        .custom-item-pattern { font-size: 11px; color: #6b7280; font-family: monospace; margin-top: 2px; word-break: break-all; background: rgba(0,0,0,0.03); padding: 2px 4px; border-radius: 4px; }
+        .custom-delete { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 13px; padding: 0 4px; line-height: 1; transition: color 0.2s; }
         .custom-delete:hover { color: #ef4444; }
+        .map-max-input { width: 58px; padding: 4px 8px; border: 1px solid rgba(209, 213, 219, 0.8); border-radius: 6px; font-size: 12px; text-align: right; font-family: inherit; outline: none; transition: border-color 0.2s; background: rgba(255,255,255,0.8); }
+        .map-max-input:focus { border-color: #10b981; }
+        .map-warn-box { margin: 4px 12px 6px; padding: 8px 10px; background: rgba(254, 242, 242, 0.8); border: 1px solid rgba(254, 202, 202, 0.8); border-radius: 8px; }
+        .map-warn-text { font-size: 11px; color: #dc2626; line-height: 1.4; }
+        .map-warn-btns { display: flex; gap: 6px; margin-top: 8px; }
+        .btn-warn-cancel  { flex: 1; padding: 6px; background: white; border: 1px solid rgba(209, 213, 219, 0.8); border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; font-weight: 500; transition: background 0.2s; }
+        .btn-warn-cancel:hover  { background: #f9fafb; }
+        .btn-warn-confirm { flex: 1; padding: 6px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+        .btn-warn-confirm:hover { background: #dc2626; }
+        
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            .panel { background: rgba(30, 41, 59, 0.85); border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset; }
+            .panel-header { background: rgba(15, 23, 42, 0.5); border-color: rgba(255, 255, 255, 0.1); }
+            .panel-title { color: #f8fafc; }
+            .panel-version { color: #94a3b8; }
+            .panel-btn { color: #e2e8f0; }
+            .panel-btn:hover { background: rgba(255, 255, 255, 0.05); color: #f8fafc; }
+            .toggle-row:hover { background: rgba(255, 255, 255, 0.03); }
+            .toggle-label { color: #e2e8f0; }
+            .slider { background-color: #475569; }
+            .btn-back { color: #94a3b8; }
+            .btn-back:hover { color: #f8fafc; }
+            .custom-form { border-color: rgba(255, 255, 255, 0.1); }
+            .custom-input { background: rgba(15, 23, 42, 0.5); border-color: rgba(255, 255, 255, 0.2); color: #f8fafc; }
+            .custom-item { border-color: rgba(255, 255, 255, 0.05); }
+            .custom-item-pattern { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+            .map-max-input { background: rgba(15, 23, 42, 0.5); border-color: rgba(255, 255, 255, 0.2); color: #f8fafc; }
+            .map-warn-box { background: rgba(127, 29, 29, 0.2); border-color: rgba(185, 28, 28, 0.5); }
+            .map-warn-text { color: #fca5a5; }
+            .btn-warn-cancel { background: rgba(30, 41, 59, 0.8); border-color: rgba(255, 255, 255, 0.2); color: #f8fafc; }
+            .btn-warn-cancel:hover { background: rgba(51, 65, 85, 0.8); }
+            .sub-panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
+            .sub-panel-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        }
     `;
 
     const wrapper = document.createElement('div');
@@ -277,6 +388,23 @@ function injectFloatingWidget(initialSettings) {
 
                 <div class="section-title">Custom</div>
                 <div class="customize-row"><button class="customize-link" id="btn-custom-customize">manage ›</button></div>
+
+                <div class="section-title">Map</div>
+                <div class="toggle-row">
+                    <span class="toggle-label" id="map-count-label">${currentMapOrder.length} / ${currentMapMax} entries</span>
+                    <button class="customize-link" id="btn-clear-map">Clear</button>
+                </div>
+                <div class="toggle-row" style="margin-top:0; padding-top:4px;">
+                    <span class="toggle-label">Max entries</span>
+                    <input type="number" class="map-max-input" id="map-max-input" value="${currentMapMax}" min="100">
+                </div>
+                <div id="map-warn-box" class="map-warn-box" style="display:none;">
+                    <div class="map-warn-text">⚠ Tokens already in chat will show as [TOKEN_1] and can't be unmasked.</div>
+                    <div class="map-warn-btns">
+                        <button class="btn-warn-cancel" id="btn-clear-cancel">Cancel</button>
+                        <button class="btn-warn-confirm" id="btn-clear-confirm">Clear anyway</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -398,7 +526,14 @@ function injectFloatingWidget(initialSettings) {
     wrapper.appendChild(panel);
     shadow.appendChild(style);
     shadow.appendChild(wrapper);
-    document.body.appendChild(container);
+    document.documentElement.appendChild(container);
+
+    // Ensure it stays alive (SPA navigations can sometimes be aggressive)
+    setInterval(() => {
+        if (!document.getElementById('zerotrust-bouncer-widget-container')) {
+            document.documentElement.appendChild(container);
+        }
+    }, 2000);
 
     // Navigation Listeners
     const viewMain = panel.querySelector('#view-main');
@@ -561,6 +696,47 @@ function injectFloatingWidget(initialSettings) {
         renderCustomPatterns();
         nameEl.value = '';
         regexEl.value = '';
+    });
+
+    // -------------------------------------------------------------------------
+    // Map section — count display, max-entries input, clear button
+    // -------------------------------------------------------------------------
+    const mapCountLabel = panel.querySelector('#map-count-label');
+    const mapWarnBox    = panel.querySelector('#map-warn-box');
+    const mapMaxInput   = panel.querySelector('#map-max-input');
+
+    // Wire the module-level updater so MapUpdate events can refresh the label live
+    _updateMapCount = () => {
+        if (mapCountLabel) mapCountLabel.textContent = `${currentMapOrder.length} / ${currentMapMax} entries`;
+    };
+
+    // Max-entries input — save on blur/enter, clamp to ≥100
+    mapMaxInput.addEventListener('change', () => {
+        const val = Math.max(100, parseInt(mapMaxInput.value) || 1000);
+        mapMaxInput.value = val;
+        currentMapMax = val;
+        chrome.storage.local.set({ pii_map_max: val });
+        _updateMapCount();
+    });
+
+    // Clear button → show inline warning
+    panel.querySelector('#btn-clear-map').addEventListener('click', () => {
+        mapWarnBox.style.display = 'block';
+    });
+
+    // Cancel → hide warning
+    panel.querySelector('#btn-clear-cancel').addEventListener('click', () => {
+        mapWarnBox.style.display = 'none';
+    });
+
+    // Confirm clear → wipe map in content + engine + storage
+    panel.querySelector('#btn-clear-confirm').addEventListener('click', () => {
+        piiMap = {};
+        currentMapOrder = [];
+        chrome.storage.local.set({ pii_map: {}, pii_map_order: [], pii_counters: {} });
+        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapClear', {}));
+        mapWarnBox.style.display = 'none';
+        _updateMapCount();
     });
 
     // Dragging Logic

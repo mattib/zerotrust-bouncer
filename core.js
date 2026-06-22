@@ -340,6 +340,23 @@ window.addEventListener('ZeroTrustBouncer_ConfigUpdate', (e) => {
     } catch (err) {}
 });
 
+// Restore persisted piiMap + piiCounters on page load
+window.addEventListener('ZeroTrustBouncer_MapRestore', (e) => {
+    try {
+        const data = JSON.parse(e.detail);
+        if (data.piiMap)     Object.assign(window.ZeroTrust.piiMap, data.piiMap);
+        if (data.piiCounters) Object.assign(window.ZeroTrust.piiCounters, data.piiCounters);
+        window.ZeroTrust.log("Map restored:", Object.keys(window.ZeroTrust.piiMap).length, "entries");
+    } catch (err) {}
+});
+
+// Clear the in-memory map (triggered by the Clear button in Settings)
+window.addEventListener('ZeroTrustBouncer_MapClear', () => {
+    window.ZeroTrust.piiMap     = {};
+    window.ZeroTrust.piiCounters = {};
+    window.ZeroTrust.log("Map cleared by user.");
+});
+
 if (navigator.clipboard && navigator.clipboard.writeText) {
     const originalWriteText = navigator.clipboard.writeText;
     navigator.clipboard.writeText = async function(text) {
