@@ -1021,6 +1021,34 @@ test('URL-with-creds does NOT swallow a following Hebrew word', () => {
 });
 
 // ---------------------------------------------------------------------------
+// HEALTH_FUND (קופת חולים member #) — keyword-gated medical PII
+// ---------------------------------------------------------------------------
+console.log('\n--- HEALTH_FUND ---');
+test('health-fund member # masked WITH keyword (מספר חבר)', () => {
+    assert(maskContains('מספר חבר 95123456', 'HEALTH_FUND'));
+});
+test('health-fund member # masked after קופת חולים', () => {
+    assert(maskContains('המבוטח בקופת חולים כללית מספר 87654321', 'HEALTH_FUND'));
+});
+test('NEGATIVE: bare 8-digit (no keyword) not masked as HEALTH_FUND', () => {
+    assert(!maskContains('order number 95123456', 'HEALTH_FUND'));
+});
+
+// ---------------------------------------------------------------------------
+// ID vs landline — TYPE correctness (the checksum is the arbiter; type = meaning)
+// ---------------------------------------------------------------------------
+console.log('\n--- ID vs landline typing ---');
+test('valid ת"ז starting 03 is typed [ID] (was mislabeled [PHONE_IL_LANDLINE])', () => {
+    assert(maskContains('039285135', 'ID'));
+});
+test('valid ת"ז starting 03 is NOT mislabeled as landline', () => {
+    assert(!maskContains('039285135', 'PHONE_IL_LANDLINE'));
+});
+test('hyphenated landline still typed [PHONE_IL_LANDLINE]', () => {
+    assert(maskContains('03-1234567', 'PHONE_IL_LANDLINE'));
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');

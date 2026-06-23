@@ -77,6 +77,7 @@ window.ZeroTrust = window.ZeroTrust || {
         pii_passport_il: true,
         pii_company_il: true,
         pii_vat_il: true,
+        pii_health_fund: true,
         pii_ssn_us: true,
         pii_ni_uk: true,
         pii_iban: true,
@@ -159,8 +160,9 @@ window.ZeroTrust = window.ZeroTrust || {
         // Israeli VAT / עוסק מורשה — keyword-required; before ID (ID swallows bare 9-digit)
         { type: "VAT_IL", regex: /(?<=(?:עוסק|ח["״'.]?פ|מע["״'.]?מ)[^\d\n]{0,30})\d{8,9}(?!\d)/g },
 
-        // Israeli landline — before ID (no-dash form is 9 digits, ID would match first)
-        { type: "PHONE_IL_LANDLINE", regex: /\b0[2-489]-?\d{7}\b/g },
+        // Israeli health-fund (קופת חולים) member number — MEDICAL PII. Keyword-gated so a bare
+        // 8-9 digit number never matches; only digits following a health-fund keyword.
+        { type: "HEALTH_FUND", regex: /(?<=(?:מספר חבר|קופת חולים|קופ["״]?ח)[^\d\n]{0,30})\d{8,9}(?!\d)/g },
 
         // Israeli company registration (ח"פ) — starts with 5, 9 digits; before ID
         { 
@@ -210,11 +212,16 @@ window.ZeroTrust = window.ZeroTrust || {
         // Existing broad patterns
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
         { type: "PHONE", regex: /(?<!\d)(?:05\d|\+972-?5\d)(?:[-\s]?\d){7}(?!\d)/g },
-        { 
-            type: "ID", 
+        {
+            type: "ID",
             regex: /\b\d{9}\b/g,
             validate: function(match) { return window.ZeroTrust.validateIsraeliId(match); }
         },
+
+        // Israeli landline — AFTER ID so a valid ת"ז is typed [ID], not mislabeled [PHONE_IL_LANDLINE].
+        // The token TYPE carries meaning to the LLM, so the checksum (in ID) is the arbiter:
+        // only 9-digit numbers that FAIL the ID checksum (plus hyphenated forms) land here.
+        { type: "PHONE_IL_LANDLINE", regex: /\b0[2-489]-?\d{7}\b/g },
 
         // International phone E.164 (exclude +972 already handled)
         { type: "PHONE_INTL", regex: /(?<!\d)\+(?!972)[1-9](?:[\s\-]?\d){6,14}(?!\d)/g },
