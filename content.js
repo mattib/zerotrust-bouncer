@@ -278,7 +278,7 @@ function injectFloatingWidget(initialSettings) {
         .shield-icon { width: 22px; height: 22px; fill: white; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
         
         .panel { position: absolute; top: 54px; right: 0; width: 220px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid rgba(229, 231, 235, 0.5); opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.98); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; transform-origin: top right; }
-        .widget-wrapper:hover .panel { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .widget-wrapper.open .panel { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
         
         .panel-header { background: rgba(249, 250, 251, 0.5); padding: 12px 16px; border-bottom: 1px solid rgba(229, 231, 235, 0.5); display: flex; align-items: center; }
         .panel-title { margin: 0; font-size: 14px; font-weight: 600; color: #111827; }
@@ -799,11 +799,13 @@ function injectFloatingWidget(initialSettings) {
     let dragStartY = 0;
     let initialLeft = 0;
     let initialTop = 0;
+    let dragMoved = false;
 
     button.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return; // Only left click
         
         isDragging = true;
+        dragMoved = false;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
         
@@ -827,6 +829,7 @@ function injectFloatingWidget(initialSettings) {
         
         const dx = e.clientX - dragStartX;
         const dy = e.clientY - dragStartY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragMoved = true;
         
         container.style.left = `${initialLeft + dx}px`;
         container.style.top = `${initialTop + dy}px`;
@@ -836,7 +839,17 @@ function injectFloatingWidget(initialSettings) {
         if (isDragging) {
             isDragging = false;
             button.style.cursor = 'pointer';
+            if (!dragMoved) {
+                // Click (not a drag) → toggle the panel open/closed (sticky; resize-proof)
+                const isOpen = wrapper.classList.toggle('open');
+                if (isOpen) showOnly(viewMain);
+            }
         }
+    });
+
+    // Click anywhere outside the widget → close the panel
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) wrapper.classList.remove('open');
     });
 }
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ZeroTrust Bouncer",
-  "version": "0.4.12",
+  "version": "0.4.13",
   "author": "Matti B. <mattiba@gmail.com>",
   "description": "AI Privacy Masking Extension",
   "permissions": [
