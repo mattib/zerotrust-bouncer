@@ -575,7 +575,8 @@ test('npm npm_ token', () => {
     assert(maskContainsWithConfig('npm_' + 'a'.repeat(36), 'API_KEY'));
 });
 test('Opsgenie UUID token', () => {
-    assert(maskContainsWithConfig('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'API_KEY'));
+    assert(maskContainsWithConfig('Opsgenie token: a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'API_KEY'));
+    assert(!maskContainsWithConfig('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'API_KEY')); // bare UUID should pass through
 });
 test('PlanetScale pscale_tkn_ token', () => {
     assert(maskContainsWithConfig('pscale_tkn_' + 'a'.repeat(36), 'API_KEY'));
@@ -599,7 +600,8 @@ test('Segment sgp_ token', () => {
     assert(maskContainsWithConfig('sgp_' + 'a'.repeat(64), 'API_KEY'));
 });
 test('Snyk UUID token', () => {
-    assert(maskContainsWithConfig('1a2b3c4d-5e6f-7890-abcd-ef1234567890', 'API_KEY'));
+    assert(maskContainsWithConfig('snyk: 1a2b3c4d-5e6f-7890-abcd-ef1234567890', 'API_KEY'));
+    assert(!maskContainsWithConfig('1a2b3c4d-5e6f-7890-abcd-ef1234567890', 'API_KEY')); // bare UUID should pass through
 });
 test('Supabase sbp_ token', () => {
     assert(maskContainsWithConfig('sbp_' + 'a'.repeat(40), 'API_KEY'));
