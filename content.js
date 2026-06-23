@@ -16,6 +16,7 @@ const defaultSettings = {
     pii_phone_il_landline: true, pii_phone_intl: true,
     pii_passport_il: true, pii_company_il: true, pii_vat_il: true,
     pii_ssn_us: true, pii_ni_uk: true, pii_plate_il: true, pii_credit_card: true,
+    pii_iban: true, pii_swift_bic: true, pii_eth_wallet: true,
     pii_ipv4: true, pii_ipv6: true, pii_mac: true, pii_url_creds: true,
     // Custom user-defined patterns
     custom_patterns: [],
@@ -302,6 +303,7 @@ function injectFloatingWidget(initialSettings) {
         #view-options { display: none; }
         #view-pii { display: none; }
         #view-api-keys { display: none; }
+        #view-providers { display: none; }
         .btn-back { background: none; border: none; cursor: pointer; padding: 0; margin-right: 8px; display: flex; align-items: center; color: #6b7280; transition: color 0.2s; }
         .btn-back:hover { color: #111827; }
         .btn-back svg { width: 18px; height: 18px; fill: currentColor; }
@@ -397,11 +399,6 @@ function injectFloatingWidget(initialSettings) {
                 <h3 class="panel-title">Settings</h3>
             </div>
             <div class="panel-body" style="padding: 0 0 8px 0;">
-                <div class="section-title">Providers</div>
-                <div class="toggle-row"><span class="toggle-label">ChatGPT</span><label class="switch"><input type="checkbox" id="tgl-provider_chatgpt" ${initialSettings.provider_chatgpt ? 'checked' : ''}><span class="slider"></span></label></div>
-                <div class="toggle-row"><span class="toggle-label">Claude</span><label class="switch"><input type="checkbox" id="tgl-provider_claude" ${initialSettings.provider_claude ? 'checked' : ''}><span class="slider"></span></label></div>
-                <div class="toggle-row"><span class="toggle-label">Gemini</span><label class="switch"><input type="checkbox" id="tgl-provider_gemini" ${initialSettings.provider_gemini ? 'checked' : ''}><span class="slider"></span></label></div>
-
                 <div class="section-title">PII Types</div>
                 <div class="toggle-row"><span class="toggle-label">All PII</span><label class="switch"><input type="checkbox" id="tgl-pii_master" ${['pii_email','pii_phone','pii_id','pii_phone_il_landline','pii_phone_intl','pii_passport_il','pii_company_il','pii_vat_il','pii_ssn_us','pii_ni_uk','pii_plate_il','pii_ipv4','pii_ipv6','pii_mac','pii_url_creds'].every(k => initialSettings[k]) ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="customize-row"><button class="customize-link" id="btn-pii-customize">customize ›</button></div>
@@ -409,6 +406,9 @@ function injectFloatingWidget(initialSettings) {
                 <div class="section-title">API Keys</div>
                 <div class="toggle-row"><span class="toggle-label">All API Keys</span><label class="switch"><input type="checkbox" id="tgl-pii_api_key" ${initialSettings.pii_api_key ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="customize-row"><button class="customize-link" id="btn-apikeys-customize">customize ›</button></div>
+
+                <div class="section-title">Providers</div>
+                <div class="customize-row"><button class="customize-link" id="btn-providers-customize">customize ›</button></div>
 
                 <div class="section-title">Custom</div>
                 <div class="customize-row"><button class="customize-link" id="btn-custom-customize">manage ›</button></div>
@@ -429,6 +429,18 @@ function injectFloatingWidget(initialSettings) {
                         <button class="btn-warn-confirm" id="btn-clear-confirm">Clear anyway</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="view-providers">
+            <div class="panel-header">
+                <button class="btn-back" id="btn-back-providers"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <h3 class="panel-title">Providers</h3>
+            </div>
+            <div class="sub-panel-body">
+                <div class="toggle-row"><span class="toggle-label">ChatGPT</span><label class="switch"><input type="checkbox" id="tgl-provider_chatgpt" ${initialSettings.provider_chatgpt ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Claude</span><label class="switch"><input type="checkbox" id="tgl-provider_claude" ${initialSettings.provider_claude ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Gemini</span><label class="switch"><input type="checkbox" id="tgl-provider_gemini" ${initialSettings.provider_gemini ? 'checked' : ''}><span class="slider"></span></label></div>
             </div>
         </div>
 
@@ -453,6 +465,9 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">UK NI Number</span><label class="switch"><input type="checkbox" id="tgl-pii_ni_uk" ${initialSettings.pii_ni_uk ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">IL Vehicle Plate</span><label class="switch"><input type="checkbox" id="tgl-pii_plate_il" ${initialSettings.pii_plate_il ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Credit Card</span><label class="switch"><input type="checkbox" id="tgl-pii_credit_card" ${initialSettings.pii_credit_card ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">IBAN</span><label class="switch"><input type="checkbox" id="tgl-pii_iban" ${initialSettings.pii_iban ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">SWIFT / BIC</span><label class="switch"><input type="checkbox" id="tgl-pii_swift_bic" ${initialSettings.pii_swift_bic ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Ethereum Wallet</span><label class="switch"><input type="checkbox" id="tgl-pii_eth_wallet" ${initialSettings.pii_eth_wallet ? 'checked' : ''}><span class="slider"></span></label></div>
 
                 <div class="section-title">Network</div>
                 <div class="toggle-row"><span class="toggle-label">IPv4 Address</span><label class="switch"><input type="checkbox" id="tgl-pii_ipv4" ${initialSettings.pii_ipv4 ? 'checked' : ''}><span class="slider"></span></label></div>
@@ -564,6 +579,7 @@ function injectFloatingWidget(initialSettings) {
     const viewOptions = panel.querySelector('#view-options');
     const viewPii = panel.querySelector('#view-pii');
     const viewApiKeys = panel.querySelector('#view-api-keys');
+    const viewProviders = panel.querySelector('#view-providers');
     const viewCustom = panel.querySelector('#view-custom-patterns');
 
     const showOnly = (view) => {
@@ -577,6 +593,8 @@ function injectFloatingWidget(initialSettings) {
     panel.querySelector('#btn-back-pii').addEventListener('click', () => showOnly(viewOptions));
     panel.querySelector('#btn-apikeys-customize').addEventListener('click', () => showOnly(viewApiKeys));
     panel.querySelector('#btn-back-apikeys').addEventListener('click', () => showOnly(viewOptions));
+    panel.querySelector('#btn-providers-customize').addEventListener('click', () => showOnly(viewProviders));
+    panel.querySelector('#btn-back-providers').addEventListener('click', () => showOnly(viewOptions));
     panel.querySelector('#btn-custom-customize').addEventListener('click', () => { renderCustomPatterns(); showOnly(viewCustom); });
     panel.querySelector('#btn-back-custom').addEventListener('click', () => showOnly(viewOptions));
 
@@ -592,7 +610,8 @@ function injectFloatingWidget(initialSettings) {
     const PII_KEYS = [
         'pii_email', 'pii_phone', 'pii_id', 'pii_phone_il_landline', 'pii_phone_intl',
         'pii_passport_il', 'pii_company_il', 'pii_vat_il', 'pii_ssn_us', 'pii_ni_uk',
-        'pii_plate_il', 'pii_credit_card', 'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds'
+        'pii_plate_il', 'pii_credit_card', 'pii_iban', 'pii_swift_bic', 'pii_eth_wallet',
+        'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds'
     ];
 
     // Toggle Listeners — standard per-key toggles
