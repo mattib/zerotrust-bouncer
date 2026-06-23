@@ -131,28 +131,22 @@ window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
                 if (btn._pulseTimeout) clearTimeout(btn._pulseTimeout);
                 btn._pulseTimeout = setTimeout(() => btn.classList.remove('active'), 1500);
             }
+            // Badge = total masked items in the map (stable; only changes when the map grows,
+            // so Gemini's background 0-count requests can't hide it).
+            const badge = container.shadowRoot.querySelector('#zt-mask-badge');
+            if (badge) {
+                const n = Object.keys(newMap).length;
+                badge.textContent = n > 99 ? '99+' : String(n);
+                badge.style.display = n > 0 ? 'block' : 'none';
+            }
         }
     } catch (err) {
         console.error(ztPrefix, "Error handling MapUpdate", err);
     }
 });
 
-// Update the shield badge with the number of items masked in the last sent message.
-window.addEventListener('ZeroTrustBouncer_MaskedCount', (e) => {
-    try {
-        const count = parseInt(e.detail) || 0;
-        const container = document.getElementById('zerotrust-bouncer-widget-container');
-        if (!container || !container.shadowRoot) return;
-        const badge = container.shadowRoot.querySelector('#zt-mask-badge');
-        if (!badge) return;
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : String(count);
-            badge.style.display = 'block';
-        } else {
-            badge.style.display = 'none';
-        }
-    } catch (err) {}
-});
+// (Badge is driven by MapUpdate above = total masked items. The old per-send MaskedCount
+//  listener was removed: Gemini's many background requests flushed count=0 and kept hiding the badge.)
 
 function unmaskNode(node) {
     if (Object.keys(piiMap).length === 0) return;
