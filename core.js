@@ -274,6 +274,20 @@ window.ZeroTrust = window.ZeroTrust || {
         window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MaskedCount', { detail: String(n) }));
     },
 
+    // DEBUG-only: show each masked token with surrounding context, so we can see
+    // exactly which JSON field got changed (e.g. a structural ID that breaks the request).
+    _logMaskDiff: function(before, after) {
+        if (!window.ZeroTrust.DEBUG) return;
+        try {
+            const tokens = [...after.matchAll(/\[[A-Z_]+_[a-z0-9]{6}\]/g)];
+            console.log(`[ZeroTrust Bouncer] masked ${tokens.length} span(s) — context for each:`);
+            for (const t of tokens) {
+                const i = t.index;
+                console.log('  [ZTB MASKED]', JSON.stringify(after.slice(Math.max(0, i - 55), i + t[0].length + 5)));
+            }
+        } catch (e) {}
+    },
+
     // Generate a short random id (6 lowercase alphanumeric chars) for masking tokens.
     _shortId: function() {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';

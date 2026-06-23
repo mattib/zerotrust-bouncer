@@ -36,6 +36,7 @@ window.fetch = async function(...args) {
                 
                 if (maskedText !== bodyText) {
                     window.ZeroTrust.log(`PII DETECTED! Masking payload for ${provider.name}...`);
+                    window.ZeroTrust._logMaskDiff(bodyText, maskedText);
                     if (isRequestObj) {
                         args[0] = new Request(args[0], { body: maskedText });
                     } else {
