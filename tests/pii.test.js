@@ -1049,6 +1049,21 @@ test('hyphenated landline still typed [PHONE_IL_LANDLINE]', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Secrets / payment (keyword-gated) + Bitcoin
+// ---------------------------------------------------------------------------
+console.log('\n--- Secrets / BTC ---');
+test('password masked after Hebrew label', () => { assert(maskContains('סיסמה: TestPassword123!', 'PASSWORD')); });
+test('password masked after english label', () => { assert(maskContains('the password: hunter2xZ', 'PASSWORD')); });
+test('NEGATIVE: "password policy" not masked', () => { assert(!maskContains('password policy is strong', 'PASSWORD')); });
+test('CVV masked after label', () => { assert(maskContains('CVV: 123', 'CVV')); });
+test('NEGATIVE: bare 3-digit not CVV', () => { assert(!maskContains('order 123 shipped', 'CVV')); });
+test('card expiry masked after תוקף', () => { assert(maskContains('תוקף: 12/29', 'CARD_EXPIRY')); });
+test('NEGATIVE: DOB 15/07/1985 not masked as expiry', () => { assert(!maskContains('תאריך לידה: 15/07/1985', 'CARD_EXPIRY')); });
+test('numeric passport masked after דרכון', () => { assert(maskContains('דרכון: 34567890', 'PASSPORT_IL')); });
+test('NEGATIVE: bare 8-digit not passport', () => { assert(!maskContains('מספר הזמנה 34567890', 'PASSPORT_IL')); });
+test('bitcoin bech32 masked', () => { assert(maskContains('bc1qtestexampleaddress1234567890xyz', 'BTC_WALLET')); });
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');

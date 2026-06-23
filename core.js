@@ -78,6 +78,10 @@ window.ZeroTrust = window.ZeroTrust || {
         pii_company_il: true,
         pii_vat_il: true,
         pii_health_fund: true,
+        pii_password: true,
+        pii_cvv: true,
+        pii_card_expiry: true,
+        pii_btc_wallet: true,
         pii_ssn_us: true,
         pii_ni_uk: true,
         pii_iban: true,
@@ -164,6 +168,16 @@ window.ZeroTrust = window.ZeroTrust || {
         // 8-9 digit number never matches; only digits following a health-fund keyword.
         { type: "HEALTH_FUND", regex: /(?<=(?:מספר חבר|קופת חולים|קופ["״]?ח)[^\d\n]{0,30})\d{8,9}(?!\d)/g },
 
+        // --- Secrets / payment (keyword-gated: the value alone has no safe format to match) ---
+        // Password — only the value right after a password label (no label → never matched).
+        { type: "PASSWORD", regex: /(?<=(?:[Pp]assword|passwd|PWD|pwd|סיסמה|סיסמא)\s*[:=]\s*)\S{4,}/g },
+        // CVV / CVC — 3-4 digits, only after the CVV label (bare 3-4 digits never match).
+        { type: "CVV", regex: /(?<=(?:CVV|CVC|cvv|cvc)\s*[:=]?\s*)\d{3,4}\b/g },
+        // Card expiry MM/YY(YY) — keyword-gated + month 01-12 (so a DOB like 15/07/1985 never matches).
+        { type: "CARD_EXPIRY", regex: /(?<=(?:תוקף|exp|expiry|valid)\D{0,8})(?:0[1-9]|1[0-2])\/\d{2,4}\b/g },
+        // Numeric passport (IL 8-9 digit) — keyword-gated on דרכון/passport (bare digits are ambiguous).
+        { type: "PASSPORT_IL", regex: /(?<=(?:דרכון|[Pp]assport)\D{0,12})\d{7,9}\b/g },
+
         // Israeli company registration (ח"פ) — starts with 5, 9 digits; before ID
         { 
             type: "COMPANY_IL", 
@@ -207,6 +221,10 @@ window.ZeroTrust = window.ZeroTrust || {
 
         // Ethereum Wallet Address
         { type: "ETH_WALLET", regex: /\b0x[a-fA-F0-9]{40}\b/g },
+
+        // Bitcoin wallet — bech32 (bc1…) only; distinctive prefix = low false-positive.
+        // Legacy 1…/3… base58 deferred until checksum-validated (would over-match without it).
+        { type: "BTC_WALLET", regex: /\bbc1[a-z0-9]{25,59}\b/g },
 
 
         // Existing broad patterns
