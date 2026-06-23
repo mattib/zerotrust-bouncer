@@ -78,6 +78,9 @@ window.ZeroTrust = window.ZeroTrust || {
         pii_vat_il: true,
         pii_ssn_us: true,
         pii_ni_uk: true,
+        pii_iban: true,
+        pii_swift_bic: true,
+        pii_eth_wallet: true,
         pii_ipv4: true,
         pii_ipv6: true,
         pii_mac: true,
@@ -171,6 +174,34 @@ window.ZeroTrust = window.ZeroTrust || {
             }
         },
 
+        // IBAN (International Bank Account Number)
+        {
+            type: "IBAN",
+            regex: /\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b/g,
+            validate: function(match) {
+                const iban = match.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                const reordered = iban.substring(4) + iban.substring(0, 4);
+                const numeric = reordered.split('').map(c => {
+                    const code = c.charCodeAt(0);
+                    return (code >= 65 && code <= 90) ? (code - 55).toString() : c;
+                }).join('');
+                let remainder = numeric;
+                let block;
+                while (remainder.length > 2) {
+                    block = remainder.slice(0, 9);
+                    remainder = (parseInt(block, 10) % 97) + remainder.slice(block.length);
+                }
+                return parseInt(remainder, 10) % 97 === 1;
+            }
+        },
+
+        // SWIFT/BIC Bank Code — keyword-gated (must follow "SWIFT"/"BIC") so it can't mask normal ALL-CAPS words
+        { type: "SWIFT_BIC", regex: /(?<=(?:SWIFT|Swift|swift|BIC|Bic|bic)[^\n]{0,15}?)[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b/g },
+
+        // Ethereum Wallet Address
+        { type: "ETH_WALLET", regex: /\b0x[a-fA-F0-9]{40}\b/g },
+
+
         // Existing broad patterns
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
         { type: "PHONE", regex: /(?<!\d)(?:05\d|\+972-?5\d)(?:[-\s]?\d){7}(?!\d)/g },
@@ -196,7 +227,7 @@ window.ZeroTrust = window.ZeroTrust || {
         { type: "PLATE_IL", regex: /\b(?:\d{2}-\d{3}-\d{2}|\d{3}-\d{2}-\d{3})\b/g }
     ],
     piiMap: {},
-    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0 },
+    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IBAN: 0, SWIFT_BIC: 0, ETH_WALLET: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0 },
     providers: [],
 
     // Luhn checksum — strips spaces/dashes, validates credit card digits

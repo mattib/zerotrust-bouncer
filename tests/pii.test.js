@@ -924,6 +924,38 @@ test('masked count — sums across multiple mask calls in one send (Gemini-style
 });
 
 // ---------------------------------------------------------------------------
+// FINANCIAL — IBAN (mod-97), SWIFT/BIC (keyword-gated), ETH wallet
+// ---------------------------------------------------------------------------
+console.log('\n--- IBAN / SWIFT / ETH ---');
+test('IBAN valid (DE) is masked', () => {
+    assert(maskContains('Wire it to DE89370400440532013000 please', 'IBAN'));
+});
+test('IBAN valid (GB) is masked', () => {
+    assert(maskContains('Account GB82WEST12345698765432', 'IBAN'));
+});
+test('NEGATIVE: invalid IBAN checksum not masked', () => {
+    assert(!maskContains('Account DE00370400440532013000', 'IBAN'));
+});
+test('SWIFT masked when labeled (8-char)', () => {
+    assert(maskContains('Our SWIFT is DEUTDEFF', 'SWIFT_BIC'));
+});
+test('BIC masked when labeled (11-char)', () => {
+    assert(maskContains('BIC: LOYDGB2L', 'SWIFT_BIC'));
+});
+test('NEGATIVE: plain CAPS word not masked as SWIFT (the bug fix)', () => {
+    assert(!maskContains('The COMPUTER is broken', 'SWIFT_BIC'));
+});
+test('NEGATIVE: PASSWORD not masked as SWIFT', () => {
+    assert(!maskContains('Enter PASSWORD now', 'SWIFT_BIC'));
+});
+test('ETH wallet masked', () => {
+    assert(maskContains('Send to 0x52908400098527886E0F7030069857D2E4169EE7 now', 'ETH_WALLET'));
+});
+test('NEGATIVE: short hex not masked as ETH', () => {
+    assert(!maskContains('value 0xABCD here', 'ETH_WALLET'));
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');
