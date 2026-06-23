@@ -583,7 +583,7 @@ function injectFloatingWidget(initialSettings) {
     const viewCustom = panel.querySelector('#view-custom-patterns');
 
     const showOnly = (view) => {
-        [viewMain, viewOptions, viewPii, viewApiKeys, viewCustom].forEach(v => v.style.display = 'none');
+        [viewMain, viewOptions, viewPii, viewApiKeys, viewProviders, viewCustom].forEach(v => v.style.display = 'none');
         view.style.display = 'block';
     };
 
