@@ -117,10 +117,13 @@ window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
             window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapSync', { detail: JSON.stringify(newMap) }));
         }
 
-        // Persist
-        const counters = derivedCounters(newMap);
-        chrome.storage.local.set({ pii_map: newMap, pii_map_order: currentMapOrder, pii_counters: counters });
-        _updateMapCount();
+        // Persist (skip if the extension context was invalidated — e.g. after a reload with
+        // the tab still open; chrome.storage is gone then and would throw, breaking the answer)
+        if (chrome.runtime && chrome.runtime.id) {
+            const counters = derivedCounters(newMap);
+            chrome.storage.local.set({ pii_map: newMap, pii_map_order: currentMapOrder, pii_counters: counters });
+            _updateMapCount();
+        }
         
         // Trigger pulse animation on the shield widget
         const container = document.getElementById('zerotrust-bouncer-widget-container');

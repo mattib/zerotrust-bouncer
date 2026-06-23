@@ -321,7 +321,10 @@ window.ZeroTrust = window.ZeroTrust || {
         maskedCount += customResult.count || 0;
 
         if (modified) {
-            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapUpdate', { detail: JSON.stringify(window.ZeroTrust.piiMap) }));
+            // A listener throwing (e.g. an invalidated content-script context) must NEVER break masking.
+            try {
+                window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapUpdate', { detail: JSON.stringify(window.ZeroTrust.piiMap) }));
+            } catch (e) {}
         }
 
         // Accumulate into the per-send total; the network interceptor flushes it once per send
