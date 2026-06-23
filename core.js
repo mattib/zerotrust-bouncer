@@ -63,8 +63,9 @@ const API_KEY_DEFS = [
 
 window.ZeroTrust = window.ZeroTrust || {
     logPrefix: "[ZeroTrust Bouncer]", // Default fallback
+    DEBUG: false, // OFF by default → quiet console. Set window.ZeroTrust.DEBUG = true to see intercept logs.
     log: function(...args) {
-        console.log(window.ZeroTrust.logPrefix, ...args);
+        if (window.ZeroTrust.DEBUG) console.log(window.ZeroTrust.logPrefix, ...args);
     },
     
     config: {
