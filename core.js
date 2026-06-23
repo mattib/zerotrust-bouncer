@@ -154,7 +154,7 @@ window.ZeroTrust = window.ZeroTrust || {
         // would otherwise consume their tokens first.
 
         // URL with embedded credentials — must come before EMAIL (EMAIL would eat "pass@host")
-        { type: "URL_CREDS", regex: /https?:\/\/[^:@\s\/]+:[^@\s\/]+@[^\s]+/g },
+        { type: "URL_CREDS", regex: /https?:\/\/[^:@\s\/]+:[^@\s\/]+@[A-Za-z0-9._~\-:\/?#\[\]@!$&'()*+,;=%]+/g },
 
         // Israeli VAT / עוסק מורשה — keyword-required; before ID (ID swallows bare 9-digit)
         { type: "VAT_IL", regex: /(?<=(?:עוסק|ח["״'.]?פ|מע["״'.]?מ)[^\d\n]{0,30})\d{8,9}(?!\d)/g },

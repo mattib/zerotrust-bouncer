@@ -990,6 +990,21 @@ test('NEGATIVE: +972 IL still excluded from PHONE_INTL', () => {
 });
 
 // ---------------------------------------------------------------------------
+// URL_CREDS — trailing boundary (don't swallow following text / Hebrew)
+// ---------------------------------------------------------------------------
+console.log('\n--- URL_CREDS boundary ---');
+test('URL-with-creds masks the URL', () => {
+    assert(maskContains('go to https://admin:s3cret@internal.example.com/panel now', 'URL_CREDS'));
+});
+test('URL-with-creds does NOT swallow a following Hebrew word', () => {
+    window.ZeroTrust.piiMap = {}; window.ZeroTrust.piiCounters = {};
+    for (const rule of window.ZeroTrust.PII_REGEXES) { if (rule.regex) rule.regex.lastIndex = 0; }
+    const out = window.ZeroTrust.maskText('https://rachel:TempPass2026@dev.company.co.il.\\nרכב הליסינג');
+    assert(/\[URL_CREDS_/.test(out), 'URL should be masked');
+    assert(out.includes('רכב'), 'Hebrew word רכב must NOT be swallowed into the URL token');
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');
