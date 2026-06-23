@@ -304,10 +304,14 @@ function injectFloatingWidget(initialSettings) {
         #view-pii { display: none; }
         #view-api-keys { display: none; }
         #view-providers { display: none; }
+        #view-map { display: none; }
         .btn-back { background: none; border: none; cursor: pointer; padding: 0; margin-right: 8px; display: flex; align-items: center; color: #6b7280; transition: color 0.2s; }
         .btn-back:hover { color: #111827; }
         .btn-back svg { width: 18px; height: 18px; fill: currentColor; }
         .sub-panel-body { max-height: 320px; overflow-y: auto; padding: 0 0 8px 0; }
+        .map-row { display: flex; flex-direction: column; gap: 1px; padding: 6px 12px; border-top: 1px solid rgba(243, 244, 246, 0.6); }
+        .map-token { font-size: 11px; font-family: monospace; color: #059669; }
+        .map-value { font-size: 12px; color: #374151; word-break: break-all; }
         /* Scrollbar styles */
         .sub-panel-body::-webkit-scrollbar { width: 4px; }
         .sub-panel-body::-webkit-scrollbar-track { background: transparent; }
@@ -360,6 +364,9 @@ function injectFloatingWidget(initialSettings) {
             .custom-input { background: rgba(15, 23, 42, 0.5); border-color: rgba(255, 255, 255, 0.2); color: #f8fafc; }
             .custom-item { border-color: rgba(255, 255, 255, 0.05); }
             .custom-item-pattern { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+            .map-value { color: #e2e8f0; }
+            .map-token { color: #34d399; }
+            .map-row { border-color: rgba(255, 255, 255, 0.06); }
             .map-max-input { background: rgba(15, 23, 42, 0.5); border-color: rgba(255, 255, 255, 0.2); color: #f8fafc; }
             .map-warn-box { background: rgba(127, 29, 29, 0.2); border-color: rgba(185, 28, 28, 0.5); }
             .map-warn-text { color: #fca5a5; }
@@ -418,6 +425,7 @@ function injectFloatingWidget(initialSettings) {
                     <span class="toggle-label" id="map-count-label">${currentMapOrder.length} / ${currentMapMax} entries</span>
                     <button class="customize-link" id="btn-clear-map">Clear</button>
                 </div>
+                <div class="customize-row"><button class="customize-link" id="btn-map-view">view masked items ›</button></div>
                 <div class="toggle-row" style="margin-top:0; padding-top:4px;">
                     <span class="toggle-label">Max entries</span>
                     <input type="number" class="map-max-input" id="map-max-input" value="${currentMapMax}" min="100">
@@ -442,6 +450,14 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">Claude</span><label class="switch"><input type="checkbox" id="tgl-provider_claude" ${initialSettings.provider_claude ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Gemini</span><label class="switch"><input type="checkbox" id="tgl-provider_gemini" ${initialSettings.provider_gemini ? 'checked' : ''}><span class="slider"></span></label></div>
             </div>
+        </div>
+
+        <div id="view-map">
+            <div class="panel-header">
+                <button class="btn-back" id="btn-back-map"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+                <h3 class="panel-title">Masked Items</h3>
+            </div>
+            <div class="sub-panel-body" id="map-list"></div>
         </div>
 
         <div id="view-pii">
@@ -580,10 +596,11 @@ function injectFloatingWidget(initialSettings) {
     const viewPii = panel.querySelector('#view-pii');
     const viewApiKeys = panel.querySelector('#view-api-keys');
     const viewProviders = panel.querySelector('#view-providers');
+    const viewMap = panel.querySelector('#view-map');
     const viewCustom = panel.querySelector('#view-custom-patterns');
 
     const showOnly = (view) => {
-        [viewMain, viewOptions, viewPii, viewApiKeys, viewProviders, viewCustom].forEach(v => v.style.display = 'none');
+        [viewMain, viewOptions, viewPii, viewApiKeys, viewProviders, viewMap, viewCustom].forEach(v => v.style.display = 'none');
         view.style.display = 'block';
     };
 
@@ -595,6 +612,34 @@ function injectFloatingWidget(initialSettings) {
     panel.querySelector('#btn-back-apikeys').addEventListener('click', () => showOnly(viewOptions));
     panel.querySelector('#btn-providers-customize').addEventListener('click', () => showOnly(viewProviders));
     panel.querySelector('#btn-back-providers').addEventListener('click', () => showOnly(viewOptions));
+
+    function renderMapList() {
+        const list = panel.querySelector('#map-list');
+        list.innerHTML = '';
+        const entries = Object.entries(piiMap);
+        if (entries.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'custom-empty';
+            empty.textContent = 'Nothing masked yet.';
+            list.appendChild(empty);
+            return;
+        }
+        entries.forEach(([token, value]) => {
+            const row = document.createElement('div');
+            row.className = 'map-row';
+            const k = document.createElement('span');
+            k.className = 'map-token';
+            k.textContent = token;
+            const v = document.createElement('span');
+            v.className = 'map-value';
+            v.textContent = value;
+            row.appendChild(k);
+            row.appendChild(v);
+            list.appendChild(row);
+        });
+    }
+    panel.querySelector('#btn-map-view').addEventListener('click', () => { renderMapList(); showOnly(viewMap); });
+    panel.querySelector('#btn-back-map').addEventListener('click', () => showOnly(viewOptions));
     panel.querySelector('#btn-custom-customize').addEventListener('click', () => { renderCustomPatterns(); showOnly(viewCustom); });
     panel.querySelector('#btn-back-custom').addEventListener('click', () => showOnly(viewOptions));
 
