@@ -956,6 +956,26 @@ test('NEGATIVE: short hex not masked as ETH', () => {
 });
 
 // ---------------------------------------------------------------------------
+// IPV6 — tightened (no more ::, e::, ::before false positives)
+// ---------------------------------------------------------------------------
+console.log('\n--- IPV6 ---');
+test('IPv6 full form masked', () => {
+    assert(maskContains('addr 2001:0db8:85a3:0000:0000:8a2e:0370:7334 ok', 'IPV6'));
+});
+test('IPv6 compressed masked', () => {
+    assert(maskContains('host fe80::1ff:fe23:4567:890a here', 'IPV6'));
+});
+test('NEGATIVE: bare :: not masked', () => {
+    assert(!maskContains('use the :: operator', 'IPV6'));
+});
+test('NEGATIVE: e:: fragment not masked', () => {
+    assert(!maskContains('some code e:: here', 'IPV6'));
+});
+test('NEGATIVE: CSS ::before not masked', () => {
+    assert(!maskContains('the ::before pseudo-element', 'IPV6'));
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');
