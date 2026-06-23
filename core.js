@@ -209,7 +209,7 @@ window.ZeroTrust = window.ZeroTrust || {
         { type: "ID", regex: /\b\d{9}\b/g },
 
         // International phone E.164 (exclude +972 already handled)
-        { type: "PHONE_INTL", regex: /(?<!\d)\+(?!972)[1-9]\d{6,14}(?!\d)/g },
+        { type: "PHONE_INTL", regex: /(?<!\d)\+(?!972)[1-9](?:[\s\-]?\d){6,14}(?!\d)/g },
         // Israeli passport (2 uppercase letters + 7 digits)
         { type: "PASSPORT_IL", regex: /\b[A-Z]{2}\d{7}\b/g },
         // US Social Security Number

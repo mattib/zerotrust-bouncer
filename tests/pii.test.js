@@ -976,6 +976,20 @@ test('NEGATIVE: CSS ::before not masked', () => {
 });
 
 // ---------------------------------------------------------------------------
+// PHONE_INTL — separator-tolerant (dashes / spaces)
+// ---------------------------------------------------------------------------
+console.log('\n--- PHONE_INTL separators ---');
+test('intl phone with dashes masked', () => {
+    assert(maskContains('call +1-202-555-0142 today', 'PHONE_INTL'));
+});
+test('intl phone with spaces masked', () => {
+    assert(maskContains('UK office +44 20 7946 0958', 'PHONE_INTL'));
+});
+test('NEGATIVE: +972 IL still excluded from PHONE_INTL', () => {
+    assert(!maskContains('+972-50-123-4567', 'PHONE_INTL'));
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n===========================================');
