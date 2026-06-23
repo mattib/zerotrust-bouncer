@@ -160,20 +160,34 @@ test('NEGATIVE: 3 letters ABC123456', () => {
 });
 
 // ---------------------------------------------------------------------------
-// COMPANY_IL — starts with 5, exactly 9 digits
+// COMPANY_IL — starts with 5, exactly 9 digits, validated
 // ---------------------------------------------------------------------------
 console.log('\n--- COMPANY_IL ---');
-test('valid 512345678', () => {
-    assert(maskContains('512345678', 'COMPANY_IL'));
+test('valid 512345679', () => {
+    assert(maskContains('512345679', 'COMPANY_IL'));
 });
-test('in sentence: company 500000001 registered', () => {
-    assert(maskContains('company 500000001 registered', 'COMPANY_IL'));
+test('NEGATIVE: invalid checksum 512345678', () => {
+    assert(!maskContains('512345678', 'COMPANY_IL'));
 });
 test('NEGATIVE: starts with 6, not 5', () => {
-    assert(!maskContains('612345678', 'COMPANY_IL'));
+    assert(!maskContains('612345679', 'COMPANY_IL'));
 });
 test('NEGATIVE: only 8 digits starting with 5', () => {
     assert(!maskContains('51234567', 'COMPANY_IL'));
+});
+
+// ---------------------------------------------------------------------------
+// ID — exactly 9 digits, validated
+// ---------------------------------------------------------------------------
+console.log('\n--- ID ---');
+test('valid 123456782', () => {
+    assert(maskContains('123456782', 'ID'));
+});
+test('NEGATIVE: invalid checksum 123456783', () => {
+    assert(!maskContains('123456783', 'ID'));
+});
+test('NEGATIVE: 8 digits', () => {
+    assert(!maskContains('12345678', 'ID'));
 });
 
 // ---------------------------------------------------------------------------

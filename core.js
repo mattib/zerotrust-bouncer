@@ -163,7 +163,11 @@ window.ZeroTrust = window.ZeroTrust || {
         { type: "PHONE_IL_LANDLINE", regex: /\b0[2-489]-?\d{7}\b/g },
 
         // Israeli company registration (ח"פ) — starts with 5, 9 digits; before ID
-        { type: "COMPANY_IL", regex: /\b5\d{8}\b/g },
+        { 
+            type: "COMPANY_IL", 
+            regex: /\b5\d{8}\b/g,
+            validate: function(match) { return window.ZeroTrust.validateIsraeliId(match); }
+        },
 
         // Credit card — 13-19 digits, grouped or raw; Luhn-validated to kill false positives
         // Covers: Visa/MC/Discover (16-digit 4-4-4-4), Amex (15-digit 4-6-5), raw compact
@@ -206,7 +210,11 @@ window.ZeroTrust = window.ZeroTrust || {
         // Existing broad patterns
         { type: "EMAIL", regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g },
         { type: "PHONE", regex: /(?<!\d)(?:05\d|\+972-?5\d)(?:[-\s]?\d){7}(?!\d)/g },
-        { type: "ID", regex: /\b\d{9}\b/g },
+        { 
+            type: "ID", 
+            regex: /\b\d{9}\b/g,
+            validate: function(match) { return window.ZeroTrust.validateIsraeliId(match); }
+        },
 
         // International phone E.164 (exclude +972 already handled)
         { type: "PHONE_INTL", regex: /(?<!\d)\+(?!972)[1-9](?:[\s\-]?\d){6,14}(?!\d)/g },
@@ -240,6 +248,18 @@ window.ZeroTrust = window.ZeroTrust || {
             if (alt) { n *= 2; if (n > 9) n -= 9; }
             sum += n;
             alt = !alt;
+        }
+        return sum % 10 === 0;
+    },
+
+    // Israeli Teudat Zehut / Company Registration checksum
+    validateIsraeliId: function(id) {
+        if (!/^\d{9}$/.test(id)) return false;
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+            let step = parseInt(id.charAt(i), 10) * ((i % 2 === 0) ? 1 : 2);
+            if (step > 9) step -= 9;
+            sum += step;
         }
         return sum % 10 === 0;
     },
