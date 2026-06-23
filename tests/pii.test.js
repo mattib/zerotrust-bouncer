@@ -277,8 +277,8 @@ console.log('\n--- IPV6 ---');
 test('full form 2001:0db8:85a3:0000:0000:8a2e:0370:7334', () => {
     assert(maskContains('2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'IPV6'));
 });
-test('compressed loopback ::1', () => {
-    assert(maskContains('::1', 'IPV6'));
+test('bare ::1 loopback NOT masked (deliberate — trade-off to kill ::before / ::word false positives)', () => {
+    assert(!maskContains('::1', 'IPV6'));
 });
 test('compressed form 2001:db8::1', () => {
     assert(maskContains('2001:db8::1', 'IPV6'));
