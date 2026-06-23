@@ -380,7 +380,12 @@ window.ZeroTrust = window.ZeroTrust || {
             if (idx >= 0) window.ZeroTrust.PII_REGEXES[idx].regex = null;
             return;
         }
-        const regex = window.ZeroTrust._buildApiKeyRegex();
+        let regex = null;
+        try {
+            regex = window.ZeroTrust._buildApiKeyRegex();
+        } catch (e) {
+            window.ZeroTrust.log("Error building API_KEY regex:", e);
+        }
         const idx = window.ZeroTrust.PII_REGEXES.findIndex(r => r.type === 'API_KEY');
         if (regex && idx >= 0) {
             window.ZeroTrust.PII_REGEXES[idx].regex = regex;
