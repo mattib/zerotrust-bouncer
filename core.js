@@ -402,8 +402,8 @@ window.Spiimask = window.Spiimask || {
             const regex = window.Spiimask._sanitizeCustomMask(val, isAddress);
             if (!regex) continue;
 
-            // Generate UUID-like token: [CUSTOM_MASK_a1b2c3]
-            const tokenBase = 'CUSTOM_MASK';
+            // Provide context to the AI model
+            const tokenBase = isAddress ? 'ADDRESS' : 'NAME';
 
             result = result.replace(regex, (match) => {
                 count++;
