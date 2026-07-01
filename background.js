@@ -39,3 +39,35 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onStartup.addListener(() => {
     fetchBranding();
 });
+
+// ---------------------------------------------------------------------------
+// Toolbar Shield State (Green/Red)
+// ---------------------------------------------------------------------------
+const supportedDomains = ['chatgpt.com', 'chat.openai.com', 'gemini.google.com', 'claude.ai'];
+
+function updateIconState(tabId, url) {
+    if (!url) return;
+    const isSupported = supportedDomains.some(domain => url.includes(domain));
+    
+    if (isSupported) {
+        chrome.action.setIcon({ path: "assets/icon-active-128.png", tabId: tabId });
+        chrome.action.setBadgeText({ text: "ON", tabId: tabId });
+        chrome.action.setBadgeBackgroundColor({ color: "#22c55e", tabId: tabId });
+        chrome.action.setTitle({ title: "Spiimask is Active", tabId: tabId });
+    } else {
+        chrome.action.setIcon({ path: "assets/icon-inactive-128.png", tabId: tabId });
+        chrome.action.setBadgeText({ text: "", tabId: tabId });
+        chrome.action.setTitle({ title: "Spiimask is Inactive", tabId: tabId });
+    }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (tab.url) updateIconState(tabId, tab.url);
+});
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+    chrome.tabs.get(activeInfo.tabId, (tab) => {
+        if (chrome.runtime.lastError) return;
+        if (tab && tab.url) updateIconState(tab.id, tab.url);
+    });
+});

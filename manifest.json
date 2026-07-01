@@ -10,6 +10,10 @@
   "background": {
     "service_worker": "background.js"
   },
+  "action": {
+    "default_icon": "assets/icon-inactive-128.png",
+    "default_title": "Spiimask is Inactive"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
