@@ -17,6 +17,7 @@
     {
       "matches": [
         "*://chatgpt.com/*",
+        "*://chat.openai.com/*",
         "*://gemini.google.com/*",
         "*://claude.ai/*"
       ],
@@ -29,6 +30,7 @@
     {
       "matches": [
         "*://chatgpt.com/*",
+        "*://chat.openai.com/*",
         "*://gemini.google.com/*",
         "*://claude.ai/*"
       ],
