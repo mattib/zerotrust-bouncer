@@ -1,11 +1,11 @@
-# ZeroTrust Bouncer
+# Spiimask
 
 A zero-trust privacy extension that runs entirely in your browser. It intercepts and masks Personally Identifiable Information (PII) **before it ever leaves your machine**, so AI providers (ChatGPT, Claude, Gemini) only ever receive anonymized tokens — never your real data.
 
 **Built by Matti B.**
 
 ## How it works
-The moment your browser tries to send a prompt to the AI server, ZeroTrust Bouncer steps in and swaps your sensitive data for anonymous, typed tokens:
+The moment your browser tries to send a prompt to the AI server, Spiimask steps in and swaps your sensitive data for anonymous, typed tokens:
 
 > `matti@gmail.com` → `[EMAIL_a3f9c2]`
 
@@ -41,62 +41,10 @@ Accuracy comes from two disciplines, never from blind matching:
 No backend. No telemetry. No tracking. Everything happens **100% locally**, in your browser's memory.
 
 ## Current limitation
-ZeroTrust Bouncer masks **structured and labeled** data. It does **not yet** detect free-text **personal names** or **street addresses** — those require a Hebrew-aware NER model (on the roadmap). Treat it as strong protection for structured/sensitive data, not a replacement for reviewing free prose.
+Spiimask masks **structured and labeled** data. It does **not yet** detect free-text **personal names** or **street addresses** — those require a Hebrew-aware NER model (on the roadmap). Treat it as strong protection for structured/sensitive data, not a replacement for reviewing free prose.
 
 ## Install (unpacked)
 1. Go to `chrome://extensions`
 2. Enable **Developer mode** (top-right)
 3. **Load unpacked** → select this folder
 4. Open `chatgpt.com`, `claude.ai`, or `gemini.google.com` — the shield appears, and you're protected.
-
----
-
-## שומר סף לפרטיות (ZeroTrust Bouncer)
-
-תוסף פרטיות "אפס-אמון" שרץ לחלוטין בתוך הדפדפן שלך. הוא מיירט ומסווה מידע מזהה אישי (PII) **לפני שהוא עוזב את המחשב שלך**, כך שספקיות ה-AI (ChatGPT, Claude, Gemini) מקבלות רק אסימונים אנונימיים — לעולם לא את המידע האמיתי.
-
-**פותח על ידי מתי ב.**
-
-### איך זה עובד
-ברגע שהדפדפן מנסה לשלוח הנחיה לשרת ה-AI, התוסף נכנס לפעולה ומחליף את המידע הרגיש באסימונים אנונימיים מסוג מוגדר:
-
-> `matti@gmail.com` ← `[EMAIL_a3f9c2]`
-
-ה-AI מעבד את הבקשה בעזרת האסימונים בלבד. כשהוא עונה, התוסף מבטל את ההסוואה ומחזיר את הערכים האמיתיים על המסך שלך. כל אסימון שומר על **סוגו** (`[EMAIL_…]`, `[ID_…]`, `[PASSWORD_…]`) כך שה-AI עדיין מבין את משמעות הטקסט — הוא פשוט לא רואה את הערכים עצמם.
-
-**התוצאה:** החוויה המלאה של ה-AI, בלי שחברת ה-AI רואה את המידע האמיתי שלך.
-
-### מה הוא מגן עליו
-- **פרטי קשר** — אימייל, נייד וקווי ישראלי, טלפון בינלאומי
-- **זהות** — תעודת זהות (עם ולידציית ספרת ביקורת), דרכון, SSN אמריקאי, NI בריטי
-- **פיננסי** — כרטיסי אשראי (ולידציית Luhn), IBAN (ולידציית mod-97), SWIFT/BIC, ח"פ, עוסק מורשה, CVV, תוקף כרטיס
-- **סודות** — סיסמאות, מפתחות API ל-55+ שירותים (AWS, OpenAI, GitHub, Stripe, JWT, מפתחות פרטיים…), כתובות URL עם פרטי גישה
-- **קריפטו** — ארנקי Ethereum ו-Bitcoin (bech32)
-- **רשת** — IPv4, IPv6, כתובות MAC
-- **רפואי** — מספרי חבר בקופת חולים
-- **ישראלי** — לוחיות רישוי
-- **משלך** — הגדרת תבניות מותאמות אישית
-
-### למה הוא כמעט אף פעם לא מסווה את הדבר הלא נכון
-- **ולידציה מתמטית** — כרטיסי אשראי (Luhn), IBAN (mod-97), ת"ז וח"פ (ספרת ביקורת). מספר שנכשל בבדיקה — נשאר חשוף.
-- **עיגון למילות-הקשר** — ערכים מעורפלים (סיסמאות, CVV, עוסק מורשה, מספר חבר) מוסווים **רק כשהתווית שלהם צמודה אליהם**, כך שמספר או מילה אקראיים לעולם לא ייתפסו.
-
-### תכונות
-- **יירוט רשת** — חיבור ל-`fetch` ול-`XMLHttpRequest` לתפיסת מידע לפני שהוא עוזב את הדפדפן.
-- **מגן מרחף** — לחיצה פותחת את הפאנל; גרירה מזיזה אותו. מתגים לכל ספק או לכל סוג מידע בזמן אמת.
-- **מציג פריטים מוסווים** — כל אסימון מול הערך המקורי שלו.
-- **מונה** — כמה פריטים מוסווים כרגע.
-- **שמירה מתמשכת** — מפת האסימונים שורדת רענון של הדף.
-- **לוח גזירים מאובטח** — העתקת טקסט מהדף מחזירה את הערכים האמיתיים.
-
-### הבטחת פרטיות
-אין שרת. אין איסוף נתונים. אין מעקב. הכל קורה **100% מקומית** בזיכרון הדפדפן.
-
-### מגבלה נוכחית
-התוסף מסווה מידע **מובנה ומתויג**. הוא **עדיין לא** מזהה **שמות פרטיים** או **כתובות רחוב** בטקסט חופשי — אלה דורשים מודל NER עברי (במפת הדרכים).
-
-### התקנה
-1. גש ל-`chrome://extensions`
-2. הפעל **מצב מפתח** (Developer mode)
-3. **Load unpacked** → בחר את התיקייה הזו
-4. פתח את `chatgpt.com`, `claude.ai` או `gemini.google.com` — המגן מופיע, ואתה מוגן.
