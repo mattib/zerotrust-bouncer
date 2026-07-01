@@ -410,22 +410,31 @@ function injectFloatingWidget(initialSettings) {
 
     const button = document.createElement('div');
     button.className = 'shield-button';
-    button.innerHTML = `${window.SpiimaskBrand ? window.SpiimaskBrand.widgetIconSvg : '<svg class="shield-icon" viewBox="0 0 256 256"><rect width="256" height="256" rx="56" fill="#0a0a0a"/><g transform="translate(28,78) scale(0.8333)"><path fill="currentColor" d="M6 34 C40 42 54 26 78 26 C98 26 108 40 120 43 C132 40 142 26 162 26 C186 26 200 42 234 34 C206 64 192 94 166 93 C143 92 132 78 120 76 C108 78 97 92 74 93 C48 94 34 64 6 34 Z"/><circle cx="73" cy="59" r="24" fill="#fff"/><circle cx="167" cy="59" r="24" fill="#fff"/><circle cx="80" cy="60" r="10" fill="#0a0a0a"/><circle cx="174" cy="60" r="10" fill="#0a0a0a"/><circle cx="76" cy="53.5" r="3.4" fill="#fff"/><circle cx="170" cy="53.5" r="3.4" fill="#fff"/></g></svg>'}<span class="shield-badge" id="zt-mask-badge"></span>`;
+    const fallbackSvg = '<svg class="shield-icon" viewBox="0 0 256 256"><rect width="256" height="256" rx="56" fill="#0a0a0a"/><g transform="translate(28,78) scale(0.8333)"><path fill="currentColor" d="M6 34 C40 42 54 26 78 26 C98 26 108 40 120 43 C132 40 142 26 162 26 C186 26 200 42 234 34 C206 64 192 94 166 93 C143 92 132 78 120 76 C108 78 97 92 74 93 C48 94 34 64 6 34 Z"/><circle cx="73" cy="59" r="24" fill="#fff"/><circle cx="167" cy="59" r="24" fill="#fff"/><circle cx="80" cy="60" r="10" fill="#0a0a0a"/><circle cx="174" cy="60" r="10" fill="#0a0a0a"/><circle cx="76" cy="53.5" r="3.4" fill="#fff"/><circle cx="170" cy="53.5" r="3.4" fill="#fff"/></g></svg>';
+    const iconSvg = window.SpiimaskBrand ? window.SpiimaskBrand.widgetIconSvg : fallbackSvg;
+
+    button.innerHTML = `${iconSvg}<span class="shield-badge" id="zt-mask-badge"></span>`;
 
     const panel = document.createElement('div');
     panel.className = 'panel';
     const m = chrome.runtime.getManifest();
     
     panel.innerHTML = `
+        <style>
+            .panel-header .shield-icon { color: #10b981 !important; filter: none !important; width: 42px !important; height: 42px !important; }
+        </style>
         <div id="view-main">
             <div class="panel-header" style="flex-direction: column; align-items: flex-start;">
-                <h3 class="panel-title">${m.name}</h3>
-                <p class="panel-version">v${m.version}</p>
+                <div style="margin-bottom: 4px;">${iconSvg}</div>
+                <h3 class="panel-title" style="display: none;">${m.name}</h3>
+                <p class="panel-slogan" style="font-size: 12px; color: #4b5563; font-weight: 500; margin: 4px 0 0 0; line-height: 1.3;">All the AI magic, with none of the exposure.</p>
+                <p class="panel-version" style="margin: 4px 0 0 0; font-size: 11px; color: #9ca3af;">v${m.version}</p>
             </div>
             <div class="panel-body">
-                <button class="panel-btn" id="btn-info"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>More Info</button>
-                <button class="panel-btn" id="btn-issue"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Report Issue</button>
                 <button class="panel-btn" id="btn-options"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>Options</button>
+                <button class="panel-btn" id="btn-share"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>Send to a Friend</button>
+                <button class="panel-btn" id="btn-info"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>More Info</button>
+                <button class="panel-btn" id="btn-issue"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Feedback & Support</button>
             </div>
         </div>
         <div id="view-options">
@@ -677,6 +686,10 @@ function injectFloatingWidget(initialSettings) {
 
     panel.querySelector('#btn-info').addEventListener('click', () => {
         window.open('https://github.com/mattib/spiimask', '_blank');
+    });
+
+    panel.querySelector('#btn-share').addEventListener('click', () => {
+        window.open('https://spiimask.com', '_blank');
     });
 
     // PII master keys list (all individual pii_* types, no api keys)
