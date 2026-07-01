@@ -26,8 +26,13 @@ async function fetchBranding() {
 }
 
 // Fetch on install/update
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
     fetchBranding();
+    
+    // Open onboarding page on fresh install
+    if (details.reason === 'install') {
+        chrome.tabs.create({ url: 'https://spiimask.com/onboarding' });
+    }
 });
 
 // Fetch when the browser starts
