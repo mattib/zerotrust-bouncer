@@ -1,0 +1,8 @@
+{
+  "supportedDomains": [
+    "chatgpt.com",
+    "chat.openai.com",
+    "gemini.google.com",
+    "claude.ai"
+  ]
+}

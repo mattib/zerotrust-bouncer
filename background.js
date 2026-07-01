@@ -43,7 +43,8 @@ chrome.runtime.onStartup.addListener(() => {
 // ---------------------------------------------------------------------------
 // Toolbar Shield State (Green/Red)
 // ---------------------------------------------------------------------------
-const supportedDomains = ['chatgpt.com', 'chat.openai.com', 'gemini.google.com', 'claude.ai'];
+importScripts('config.js');
+const supportedDomains = SpiimaskConfig.supportedDomains;
 
 function updateIconState(tabId, url) {
     if (!url) return;
