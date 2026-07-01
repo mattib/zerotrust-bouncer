@@ -671,7 +671,7 @@ function injectFloatingWidget(initialSettings) {
     panel.querySelector('#btn-back-custom').addEventListener('click', () => showOnly(viewOptions));
 
     panel.querySelector('#btn-issue').addEventListener('click', () => {
-        window.open('mailto:mattiba@gmail.com?subject=Spiimask%20Bouncer%20Feedback');
+        window.open('mailto:spiimask@gmail.com?subject=Spiimask%20Feedback');
     });
 
     panel.querySelector('#btn-info').addEventListener('click', () => {
