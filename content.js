@@ -422,13 +422,13 @@ function injectFloatingWidget(initialSettings) {
     
     panel.innerHTML = `
         <style>
-            .panel-header .brand-logo { color: #111827 !important; filter: none !important; width: 140px !important; height: auto !important; margin-left: -4px; margin-top: 4px; }
+            .panel-header .brand-logo { color: #111827 !important; filter: none !important; width: 140px !important; height: auto !important; margin-top: 4px; }
             @media (prefers-color-scheme: dark) {
                 .panel-header .brand-logo { color: #f8fafc !important; }
             }
         </style>
         <div id="view-main">
-            <div class="panel-header" style="flex-direction: column; align-items: flex-start;">
+            <div class="panel-header" style="flex-direction: column; align-items: center; text-align: center;">
                 <div style="margin-bottom: 4px;">${logoSvg}</div>
                 <h3 class="panel-title" style="display: none;">${m.name}</h3>
                 <p class="panel-slogan" style="font-size: 12px; color: #4b5563; font-weight: 500; margin: 4px 0 0 0; line-height: 1.3;">All the AI magic, with none of the exposure.</p>
