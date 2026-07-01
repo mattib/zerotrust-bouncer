@@ -554,6 +554,8 @@ document.addEventListener('copy', (e) => {
             }
             return Reflect.apply(originalSetData, this, [format, unmaskedData]);
         }
+        return Reflect.apply(originalSetData, this, [format, data]);
+    };
 }, true);
 
 // Listen for dynamic brand updates passed from the isolated content script
