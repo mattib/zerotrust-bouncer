@@ -410,8 +410,9 @@ function injectFloatingWidget(initialSettings) {
 
     const button = document.createElement('div');
     button.className = 'shield-button';
-    const fallbackSvg = '<svg class="shield-icon" viewBox="0 0 256 256"><rect width="256" height="256" rx="56" fill="#0a0a0a"/><g transform="translate(28,78) scale(0.8333)"><path fill="currentColor" d="M6 34 C40 42 54 26 78 26 C98 26 108 40 120 43 C132 40 142 26 162 26 C186 26 200 42 234 34 C206 64 192 94 166 93 C143 92 132 78 120 76 C108 78 97 92 74 93 C48 94 34 64 6 34 Z"/><circle cx="73" cy="59" r="24" fill="#fff"/><circle cx="167" cy="59" r="24" fill="#fff"/><circle cx="80" cy="60" r="10" fill="#0a0a0a"/><circle cx="174" cy="60" r="10" fill="#0a0a0a"/><circle cx="76" cy="53.5" r="3.4" fill="#fff"/><circle cx="170" cy="53.5" r="3.4" fill="#fff"/></g></svg>';
+    const fallbackSvg = '<svg class="shield-icon" viewBox="0 0 256 256"><rect width="256" height="256" rx="56" fill="#0a0a0a"/><g transform="translate(28,78) scale(0.8333)"><path fill="currentColor" d="M6 34 C40 42 54 26 78 26 C98 26 108 40 120 43 C132 40 142 26 162 26 C186 26 200 42 234 34 C206 64 192 94 166 93 C143 92 132 78 120 76 C108 78 97 92 74 93 C48 94 34 64 6 34 Z"/><circle cx="73" cy="59" r="24" fill="#fff"/><circle cx="167" cy="59" r="24" fill="#fff"/><circle cx="80" cy="60" r="10" fill="#0a0a0a"/><circle cx="174" cy="60" r="10" fill="#0a0a0a"/><circle cx="76" cy="53.5" r="3.4" fill="#fff"/><circle cx="170" cy="53.5" r="3.4" fill=\"#fff\"/></g></svg>';
     const iconSvg = window.SpiimaskBrand ? window.SpiimaskBrand.widgetIconSvg : fallbackSvg;
+    const logoSvg = (window.SpiimaskBrand && window.SpiimaskBrand.logoSvg) ? window.SpiimaskBrand.logoSvg : iconSvg;
 
     button.innerHTML = `${iconSvg}<span class="shield-badge" id="zt-mask-badge"></span>`;
 
@@ -421,11 +422,14 @@ function injectFloatingWidget(initialSettings) {
     
     panel.innerHTML = `
         <style>
-            .panel-header .shield-icon { color: #10b981 !important; filter: none !important; width: 42px !important; height: 42px !important; }
+            .panel-header .brand-logo { color: #111827 !important; filter: none !important; width: 140px !important; height: auto !important; margin-left: -4px; margin-top: 4px; }
+            @media (prefers-color-scheme: dark) {
+                .panel-header .brand-logo { color: #f8fafc !important; }
+            }
         </style>
         <div id="view-main">
             <div class="panel-header" style="flex-direction: column; align-items: flex-start;">
-                <div style="margin-bottom: 4px;">${iconSvg}</div>
+                <div style="margin-bottom: 4px;">${logoSvg}</div>
                 <h3 class="panel-title" style="display: none;">${m.name}</h3>
                 <p class="panel-slogan" style="font-size: 12px; color: #4b5563; font-weight: 500; margin: 4px 0 0 0; line-height: 1.3;">All the AI magic, with none of the exposure.</p>
                 <p class="panel-version" style="margin: 4px 0 0 0; font-size: 11px; color: #9ca3af;">v${m.version}</p>
@@ -689,7 +693,7 @@ function injectFloatingWidget(initialSettings) {
     });
 
     panel.querySelector('#btn-share').addEventListener('click', () => {
-        window.open('https://spiimask.com', '_blank');
+        window.open('https://chromewebstore.google.com/detail/idipibhfphbjjkfnkicnolbfaimiefnp', '_blank');
     });
 
     // PII master keys list (all individual pii_* types, no api keys)
