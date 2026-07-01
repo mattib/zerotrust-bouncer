@@ -31,7 +31,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     
     // Open onboarding page on fresh install
     if (details.reason === 'install') {
-        chrome.tabs.create({ url: 'https://spiimask.com/onboarding' });
+        chrome.tabs.create({ url: 'https://bouncer-website.spiimask.workers.dev/onboarding.html' });
     }
 });
 

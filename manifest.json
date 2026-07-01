@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Spiimask",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "author": "Matti B. <mattiba@gmail.com>",
   "description": "AI Privacy Masking Extension",
   "permissions": [
