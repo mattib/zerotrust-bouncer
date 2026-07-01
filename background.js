@@ -50,12 +50,12 @@ function updateIconState(tabId, url) {
     const isSupported = supportedDomains.some(domain => url.includes(domain));
     
     if (isSupported) {
-        chrome.action.setIcon({ path: "assets/icon-active-128.png", tabId: tabId });
+        chrome.action.setIcon({ path: { 16: "assets/icon-active-16.png", 32: "assets/icon-active-32.png", 48: "assets/icon-active-48.png", 128: "assets/icon-active-128.png" }, tabId: tabId });
         chrome.action.setBadgeText({ text: "ON", tabId: tabId });
-        chrome.action.setBadgeBackgroundColor({ color: "#22c55e", tabId: tabId });
+        chrome.action.setBadgeBackgroundColor({ color: "#10b981", tabId: tabId });
         chrome.action.setTitle({ title: "Spiimask is Active", tabId: tabId });
     } else {
-        chrome.action.setIcon({ path: "assets/icon-inactive-128.png", tabId: tabId });
+        chrome.action.setIcon({ path: { 16: "assets/icon-inactive-16.png", 32: "assets/icon-inactive-32.png", 48: "assets/icon-inactive-48.png", 128: "assets/icon-inactive-128.png" }, tabId: tabId });
         chrome.action.setBadgeText({ text: "", tabId: tabId });
         chrome.action.setTitle({ title: "Spiimask is Inactive", tabId: tabId });
     }
