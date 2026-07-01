@@ -3,6 +3,6 @@ window.SpiimaskBrand = {
   "name": "Spiimask",
   "description": "AI Privacy Masking Extension",
   "logPrefix": "[Spiimask]",
-  "widgetIconSvg": "<svg class=\"shield-icon\" viewBox=\"0 0 24 24\"><path d=\"M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z\"/></svg>",
+  "widgetIconSvg": "<svg class=\"shield-icon\" viewBox=\"0 0 256 256\"><rect width=\"256\" height=\"256\" rx=\"56\" fill=\"#0a0a0a\"/><g transform=\"translate(28,78) scale(0.8333)\"><path fill=\"#10b981\" d=\"M6 34 C40 42 54 26 78 26 C98 26 108 40 120 43 C132 40 142 26 162 26 C186 26 200 42 234 34 C206 64 192 94 166 93 C143 92 132 78 120 76 C108 78 97 92 74 93 C48 94 34 64 6 34 Z\"/><circle cx=\"73\" cy=\"59\" r=\"24\" fill=\"#fff\"/><circle cx=\"167\" cy=\"59\" r=\"24\" fill=\"#fff\"/><circle cx=\"80\" cy=\"60\" r=\"10\" fill=\"#0a0a0a\"/><circle cx=\"174\" cy=\"60\" r=\"10\" fill=\"#0a0a0a\"/><circle cx=\"76\" cy=\"53.5\" r=\"3.4\" fill=\"#fff\"/><circle cx=\"170\" cy=\"53.5\" r=\"3.4\" fill=\"#fff\"/></g></svg>",
   "manifestIcon128": "icon-128.png"
 };
