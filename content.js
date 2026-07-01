@@ -59,8 +59,16 @@ function derivedCounters(map) {
     return counters;
 }
 
-chrome.storage.local.get(defaultSettings, (settings) => {
-    // Send initial config to core engine
+chrome.storage.local.get(['spiimask_brand'], (brandStored) => {
+    if (brandStored.spiimask_brand) {
+        window.SpiimaskBrand = brandStored.spiimask_brand;
+        window.dispatchEvent(new CustomEvent('Spiimask_BrandUpdate', {
+            detail: JSON.stringify(brandStored.spiimask_brand)
+        }));
+    }
+
+    chrome.storage.local.get(defaultSettings, (settings) => {
+        // Send initial config to core engine
     window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
         detail: JSON.stringify(settings)
     }));
@@ -80,17 +88,39 @@ chrome.storage.local.get(defaultSettings, (settings) => {
         injectFloatingWidget(settings);
     });
 });
+});
 
 // Listen for live changes in other tabs or the UI
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'local') {
         const updates = {};
         for (let [key, { newValue }] of Object.entries(changes)) {
+            if (key === 'spiimask_brand') {
+                window.SpiimaskBrand = newValue;
+                window.dispatchEvent(new CustomEvent('Spiimask_BrandUpdate', {
+                    detail: JSON.stringify(newValue)
+                }));
+                // Live update the widget if it exists
+                const container = document.getElementById('spiimask-widget-container');
+                if (container && container.shadowRoot) {
+                    const button = container.shadowRoot.querySelector('.shield-button');
+                    if (button && newValue.widgetIconSvg) {
+                        button.innerHTML = `${newValue.widgetIconSvg}<span class="shield-badge" id="zt-mask-badge"></span>`;
+                    }
+                    const title = container.shadowRoot.querySelector('.panel-title');
+                    if (title && newValue.name) {
+                        title.textContent = `${newValue.name} Settings`;
+                    }
+                }
+                continue; // Don't broadcast brand changes as config updates
+            }
             updates[key] = newValue;
         }
-        window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
-            detail: JSON.stringify(updates)
-        }));
+        if (Object.keys(updates).length > 0) {
+            window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
+                detail: JSON.stringify(updates)
+            }));
+        }
     }
 });
 

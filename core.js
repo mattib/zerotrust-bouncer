@@ -554,6 +554,17 @@ document.addEventListener('copy', (e) => {
             }
             return Reflect.apply(originalSetData, this, [format, unmaskedData]);
         }
-        return Reflect.apply(originalSetData, this, [format, data]);
-    };
 }, true);
+
+// Listen for dynamic brand updates passed from the isolated content script
+window.addEventListener('Spiimask_BrandUpdate', (e) => {
+    try {
+        const brand = JSON.parse(e.detail);
+        window.SpiimaskBrand = brand;
+        if (brand.logPrefix) {
+            window.Spiimask.logPrefix = brand.logPrefix;
+        }
+    } catch (err) {
+        console.error("Failed to parse brand update in core", err);
+    }
+});
