@@ -339,8 +339,8 @@ window.Spiimask = window.Spiimask || {
             });
         }
 
-        // User-defined custom patterns
-        const customResult = window.Spiimask._runCustomPatterns(newText);
+        // User-defined custom masks
+        const customResult = window.Spiimask._runCustomMasks(newText);
         newText = customResult.text;
         if (customResult.modified) modified = true;
         maskedCount += customResult.count || 0;
@@ -359,23 +359,51 @@ window.Spiimask = window.Spiimask || {
         return newText;
     },
 
-    // Runs all enabled user-defined custom patterns against text.
+    // -----------------------------------------------------------------------
+    // Custom Masks Feature (Replaces old Custom Patterns)
+    // -----------------------------------------------------------------------
+    _sanitizeCustomMask: function(input, isAddress) {
+        if (!input || typeof input !== 'string') return null;
+        let trimmed = input.trim();
+        if (trimmed.length < 3) return null;
+
+        const stopWords = ['and', 'the', 'for', 'with', 'that', 'this', 'של', 'את', 'על', 'עם', 'are', 'you', 'was', 'not', 'but', 'all'];
+        if (stopWords.includes(trimmed.toLowerCase())) return null;
+
+        if (isAddress) {
+            if (!/^[A-Za-z0-9א-ת\s,]+$/.test(trimmed)) return null;
+        }
+
+        // Safely escape all regex special characters
+        const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        try {
+            return new RegExp('\\b(?:' + escaped + ')\\b', 'gi');
+        } catch (e) {
+            return null;
+        }
+    },
+
+    // Runs all user-defined custom masks against text.
     // Returns { text, modified } — caller handles the MapUpdate dispatch.
-    _runCustomPatterns: function(text) {
-        const patterns = window.Spiimask.config.custom_patterns;
-        if (!Array.isArray(patterns) || !patterns.length) return { text, modified: false, count: 0 };
+    _runCustomMasks: function(text) {
+        const masks = window.Spiimask.config.custom_masks;
+        if (!Array.isArray(masks) || !masks.length) return { text, modified: false, count: 0 };
 
         let result = text;
         let modified = false;
         let count = 0;
 
-        for (const cp of patterns) {
-            if (!cp.enabled) continue;
-            let regex;
-            try { regex = new RegExp(cp.pattern, 'g'); } catch (e) { continue; }
+        for (let i = 0; i < masks.length; i++) {
+            const val = masks[i];
+            if (!val) continue;
 
-            // Token base: CUSTOM_ + sanitized name (uppercase, non-alphanumeric → underscore)
-            const tokenBase = 'CUSTOM_' + cp.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+            const isAddress = (i === 0);
+            const regex = window.Spiimask._sanitizeCustomMask(val, isAddress);
+            if (!regex) continue;
+
+            // Generate UUID-like token: [CUSTOM_MASK_a1b2c3]
+            const tokenBase = 'CUSTOM_MASK';
 
             result = result.replace(regex, (match) => {
                 count++;

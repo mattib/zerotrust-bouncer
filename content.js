@@ -680,7 +680,7 @@ function injectFloatingWidget(initialSettings) {
     }
     panel.querySelector('#btn-map-view').addEventListener('click', () => { renderMapList(); showOnly(viewMap); });
     panel.querySelector('#btn-back-map').addEventListener('click', () => showOnly(viewOptions));
-    panel.querySelector('#btn-custom-customize').addEventListener('click', () => { renderCustomPatterns(); showOnly(viewCustom); });
+    panel.querySelector('#btn-custom-customize').addEventListener('click', () => { renderCustomMasks(); showOnly(viewCustom); });
     panel.querySelector('#btn-back-custom').addEventListener('click', () => showOnly(viewOptions));
 
     panel.querySelector('#btn-issue').addEventListener('click', () => {
@@ -762,7 +762,80 @@ function injectFloatingWidget(initialSettings) {
     };
 
     // -------------------------------------------------------------------------
-    // Custom Patterns — CRUD
+    // Custom Masks — CRUD
+    // -------------------------------------------------------------------------
+    let customMasks = (initialSettings.custom_masks || ["", "", "", "", ""]).slice();
+
+    function renderCustomMasks() {
+        const slots = panel.querySelectorAll('.custom-mask-slot');
+        slots.forEach(slot => {
+            const idx = parseInt(slot.dataset.slot);
+            slot.value = customMasks[idx] || "";
+            // Clear error on input
+            slot.addEventListener('input', () => {
+                panel.querySelector('#custom-error').textContent = '';
+                slot.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            });
+        });
+    }
+
+    panel.querySelector('#btn-custom-save').addEventListener('click', () => {
+        const slots = panel.querySelectorAll('.custom-mask-slot');
+        const errorEl = panel.querySelector('#custom-error');
+        errorEl.textContent = '';
+        
+        const newMasks = ["", "", "", "", ""];
+        let hasError = false;
+
+        slots.forEach(slot => {
+            const idx = parseInt(slot.dataset.slot);
+            const val = slot.value.trim();
+            
+            if (val) {
+                if (val.length < 3) {
+                    errorEl.textContent = 'Terms must be at least 3 characters.';
+                    slot.style.borderColor = '#ef4444';
+                    hasError = true;
+                    return;
+                }
+                const stopWords = ['and', 'the', 'for', 'with', 'that', 'this', 'של', 'את', 'על', 'עם', 'are', 'you', 'was', 'not', 'but', 'all'];
+                if (stopWords.includes(val.toLowerCase())) {
+                    errorEl.textContent = 'Common stop-words are not allowed.';
+                    slot.style.borderColor = '#ef4444';
+                    hasError = true;
+                    return;
+                }
+                if (idx === 0) {
+                    // Address constraint
+                    if (!/^[A-Za-z0-9א-ת\s,]+$/.test(val)) {
+                        errorEl.textContent = 'Address can only contain letters, numbers, spaces, and commas.';
+                        slot.style.borderColor = '#ef4444';
+                        hasError = true;
+                        return;
+                    }
+                }
+            }
+            newMasks[idx] = val;
+        });
+
+        if (hasError) return;
+
+        customMasks = newMasks;
+        chrome.storage.local.set({ custom_masks: customMasks });
+        window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
+            detail: JSON.stringify({ custom_masks: customMasks })
+        }));
+        
+        const btn = panel.querySelector('#btn-custom-save');
+        const oldText = btn.textContent;
+        btn.textContent = 'Saved!';
+        btn.style.backgroundColor = '#10b981';
+        setTimeout(() => {
+            btn.textContent = oldText;
+            btn.style.backgroundColor = '';
+        }, 2000);
+    });
+
     // -------------------------------------------------------------------------
     let customPatterns = (initialSettings.custom_patterns || []).slice();
 
