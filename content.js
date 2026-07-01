@@ -602,17 +602,25 @@ function injectFloatingWidget(initialSettings) {
                 <button class="btn-back" id="btn-back-custom"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
                 <h3 class="panel-title">Custom Patterns</h3>
             </div>
-            <div class="sub-panel-body">
-                <div class="custom-form">
-                    <input type="text" class="custom-input" id="custom-name" placeholder="Name (e.g. Employee ID)" autocomplete="off">
-                    <div class="custom-input-row">
-                        <input type="text" class="custom-input" id="custom-regex" placeholder="Regex (e.g. EMP-\\d{5})" autocomplete="off" style="margin-top:0; flex:1;">
-                        <a href="https://regex101.com" target="_blank" class="regex-help" title="Build your regex at regex101.com">?</a>
-                    </div>
-                    <div id="custom-error" class="custom-error"></div>
-                    <button class="custom-add-btn" id="btn-custom-save">+ Add Pattern</button>
+            <div class="sub-panel-body" style="padding: 10px;">
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 8px; margin-bottom: 12px; font-size: 11px; color: #fca5a5;">
+                    ⚠️ <b>Warning:</b> Only add exact terms you want hidden. Improper use can hide too much text and break sites. Leave blank if unsure.
                 </div>
-                <div id="custom-list"></div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div>
+                        <label style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Address (Letters/Numbers/Commas)</label>
+                        <input type="text" class="custom-input custom-mask-slot" data-slot="0" placeholder="e.g. 123 Main St, Tel Aviv" autocomplete="off" style="margin-top:2px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Personal Terms / Names</label>
+                        <input type="text" class="custom-input custom-mask-slot" data-slot="1" placeholder="e.g. Moshe Cohen" autocomplete="off" style="margin-top:2px; margin-bottom: 4px;">
+                        <input type="text" class="custom-input custom-mask-slot" data-slot="2" placeholder="e.g. Project Omega" autocomplete="off" style="margin-bottom: 4px;">
+                        <input type="text" class="custom-input custom-mask-slot" data-slot="3" placeholder="" autocomplete="off" style="margin-bottom: 4px;">
+                        <input type="text" class="custom-input custom-mask-slot" data-slot="4" placeholder="" autocomplete="off" style="margin-bottom: 4px;">
+                    </div>
+                </div>
+                <div id="custom-error" class="custom-error"></div>
+                <button class="custom-add-btn" id="btn-custom-save" style="margin-top: 8px;">Save Terms</button>
             </div>
         </div>
     `;
@@ -834,74 +842,6 @@ function injectFloatingWidget(initialSettings) {
             btn.textContent = oldText;
             btn.style.backgroundColor = '';
         }, 2000);
-    });
-
-    // -------------------------------------------------------------------------
-    let customPatterns = (initialSettings.custom_patterns || []).slice();
-
-    function escHtml(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function saveCustomPatterns() {
-        chrome.storage.local.set({ custom_patterns: customPatterns });
-        window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
-            detail: JSON.stringify({ custom_patterns: customPatterns })
-        }));
-    }
-
-    function renderCustomPatterns() {
-        const list = panel.querySelector('#custom-list');
-        if (!list) return;
-        if (!customPatterns.length) {
-            list.innerHTML = '<div class="custom-empty">No patterns yet.<br>Add one above.</div>';
-            return;
-        }
-        list.innerHTML = customPatterns.map((cp, i) => `
-            <div class="custom-item">
-                <div class="custom-item-header">
-                    <span class="toggle-label">${escHtml(cp.name)}</span>
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <label class="switch"><input type="checkbox" class="custom-tgl" data-idx="${i}" ${cp.enabled ? 'checked' : ''}><span class="slider"></span></label>
-                        <button class="custom-delete" data-idx="${i}" title="Delete">✕</button>
-                    </div>
-                </div>
-                <div class="custom-item-pattern">${escHtml(cp.pattern)}</div>
-            </div>
-        `).join('');
-
-        list.querySelectorAll('.custom-tgl').forEach(tgl => {
-            tgl.addEventListener('change', (e) => {
-                customPatterns[parseInt(e.target.dataset.idx)].enabled = e.target.checked;
-                saveCustomPatterns();
-            });
-        });
-        list.querySelectorAll('.custom-delete').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                customPatterns.splice(parseInt(e.target.dataset.idx), 1);
-                saveCustomPatterns();
-                renderCustomPatterns();
-            });
-        });
-    }
-
-    panel.querySelector('#btn-custom-save').addEventListener('click', () => {
-        const nameEl = panel.querySelector('#custom-name');
-        const regexEl = panel.querySelector('#custom-regex');
-        const errorEl = panel.querySelector('#custom-error');
-        const name = nameEl.value.trim();
-        const pattern = regexEl.value.trim();
-
-        errorEl.textContent = '';
-        if (!name)    { errorEl.textContent = 'Name is required.'; return; }
-        if (!pattern) { errorEl.textContent = 'Regex is required.'; return; }
-        try { new RegExp(pattern); } catch (e) { errorEl.textContent = 'Invalid regex: ' + e.message; return; }
-
-        customPatterns.push({ id: customPatterns.length + 1, name, pattern, enabled: true });
-        saveCustomPatterns();
-        renderCustomPatterns();
-        nameEl.value = '';
-        regexEl.value = '';
     });
 
     // -------------------------------------------------------------------------
