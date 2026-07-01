@@ -298,11 +298,11 @@ function injectFloatingWidget(initialSettings) {
             100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
         
-        .shield-button { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; z-index: 10; border: 1px solid rgba(255,255,255,0.1); position: relative; }
-        .shield-button:hover { transform: scale(1.08); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .shield-button { width: 48px; height: 48px; border-radius: 12px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 10; position: relative; }
+        .shield-button:hover { transform: scale(1.08); }
         .shield-button.active { animation: shield-pulse 1.5s infinite; }
-        .shield-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: none; pointer-events: none; }
-        .shield-icon { width: 22px; height: 22px; fill: white; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+        .shield-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: none; pointer-events: none; z-index: 11; }
+        .shield-icon { width: 48px; height: 48px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
         
         .panel { position: absolute; top: 54px; right: 0; width: 220px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid rgba(229, 231, 235, 0.5); opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.98); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; transform-origin: top right; }
         .widget-wrapper.open .panel { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
