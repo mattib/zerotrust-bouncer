@@ -286,6 +286,11 @@ function injectFloatingWidget(initialSettings) {
 
     const shadow = container.attachShadow({ mode: 'open' });
 
+    // Prevent key events from bubbling up to the host page (e.g. Claude's input window)
+    ['keydown', 'keyup', 'keypress'].forEach(evt => {
+        container.addEventListener(evt, (e) => e.stopPropagation());
+    });
+
     const style = document.createElement('style');
     style.textContent = `
         :host { all: initial; }
