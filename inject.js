@@ -11,15 +11,15 @@ window.fetch = async function(...args) {
         }
     } catch (e) {}
 
-    const provider = window.ZeroTrust.providers.find(p => p.shouldIntercept(urlString));
+    const provider = window.Spiimask.providers.find(p => p.shouldIntercept(urlString));
 
     if (provider) {
         const configKey = `provider_${provider.name.toLowerCase()}`;
-        if (window.ZeroTrust.config[configKey] === false) {
+        if (window.Spiimask.config[configKey] === false) {
             return Reflect.apply(originalFetch, window, args);
         }
 
-        window.ZeroTrust.log(`Intercepted FETCH request for ${provider.name} -> ${urlString}`);
+        window.Spiimask.log(`Intercepted FETCH request for ${provider.name} -> ${urlString}`);
         try {
             let bodyText = null;
             let isRequestObj = false;
@@ -35,18 +35,18 @@ window.fetch = async function(...args) {
                 const maskedText = provider.processPayload(bodyText);
                 
                 if (maskedText !== bodyText) {
-                    window.ZeroTrust.log(`PII DETECTED! Masking payload for ${provider.name}...`);
+                    window.Spiimask.log(`PII DETECTED! Masking payload for ${provider.name}...`);
                     if (isRequestObj) {
                         args[0] = new Request(args[0], { body: maskedText });
                     } else {
                         args[1].body = maskedText;
                     }
-                    window.ZeroTrust.log(`Payload Masked Successfully! Forwarding...`);
+                    window.Spiimask.log(`Payload Masked Successfully! Forwarding...`);
                 }
-                window.ZeroTrust.flushMaskCount();
+                window.Spiimask.flushMaskCount();
             }
         } catch(e) {
-            console.error(window.ZeroTrust.logPrefix, "Error during masking", e);
+            console.error(window.Spiimask.logPrefix, "Error during masking", e);
         }
     }
     
@@ -64,25 +64,25 @@ XMLHttpRequest.prototype.send = function(body) {
     try {
         if (typeof body === 'string' && this._url) {
             let urlString = String(this._url);
-            const provider = window.ZeroTrust.providers.find(p => p.shouldIntercept(urlString));
+            const provider = window.Spiimask.providers.find(p => p.shouldIntercept(urlString));
             
             if (provider) {
                 const configKey = `provider_${provider.name.toLowerCase()}`;
-                if (window.ZeroTrust.config[configKey] === false) {
+                if (window.Spiimask.config[configKey] === false) {
                     return Reflect.apply(originalXHRSend, this, [body]);
                 }
 
-                window.ZeroTrust.log(`Intercepted XHR request for ${provider.name} -> ${urlString}`);
+                window.Spiimask.log(`Intercepted XHR request for ${provider.name} -> ${urlString}`);
                 const maskedText = provider.processPayload(body);
                 if (maskedText !== body) {
-                    window.ZeroTrust.log(`PII DETECTED in XHR! Masking payload for ${provider.name}...`);
+                    window.Spiimask.log(`PII DETECTED in XHR! Masking payload for ${provider.name}...`);
                     body = maskedText;
                 }
-                window.ZeroTrust.flushMaskCount();
+                window.Spiimask.flushMaskCount();
             }
         }
     } catch(e) {
-        console.error(window.ZeroTrust.logPrefix, "Error during XHR masking", e);
+        console.error(window.Spiimask.logPrefix, "Error during XHR masking", e);
     }
     return Reflect.apply(originalXHRSend, this, [body]);
 };

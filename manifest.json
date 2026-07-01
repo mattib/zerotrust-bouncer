@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ZeroTrust Bouncer",
+  "name": "Spiimask",
   "version": "0.5.1",
   "author": "Matti B. <mattiba@gmail.com>",
   "description": "AI Privacy Masking Extension",

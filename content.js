@@ -4,7 +4,7 @@ const ztLog = (...args) => console.log(ztPrefix, ...args);
 
 ztLog("Engine Started. Built by Matti B.");
 
-window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_InitLogger', { 
+window.dispatchEvent(new CustomEvent('Spiimask_InitLogger', { 
     detail: JSON.stringify({ prefix: ztPrefix }) 
 }));
 
@@ -61,7 +61,7 @@ function derivedCounters(map) {
 
 chrome.storage.local.get(defaultSettings, (settings) => {
     // Send initial config to core engine
-    window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
+    window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
         detail: JSON.stringify(settings)
     }));
 
@@ -72,7 +72,7 @@ chrome.storage.local.get(defaultSettings, (settings) => {
         currentMapMax   = stored.pii_map_max   || 1000;
 
         if (Object.keys(piiMap).length > 0) {
-            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapRestore', {
+            window.dispatchEvent(new CustomEvent('Spiimask_MapRestore', {
                 detail: JSON.stringify({ piiMap: stored.pii_map, piiCounters: stored.pii_counters || {} })
             }));
         }
@@ -88,7 +88,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         for (let [key, { newValue }] of Object.entries(changes)) {
             updates[key] = newValue;
         }
-        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
+        window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
             detail: JSON.stringify(updates)
         }));
     }
@@ -96,7 +96,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
 let piiMap = {};
 
-window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
+window.addEventListener('Spiimask_MapUpdate', (e) => {
     try {
         const newMap = JSON.parse(e.detail);
         piiMap = newMap;
@@ -114,7 +114,7 @@ window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
         }
         // If we trimmed, hand the trimmed map back to the engine so both copies match (no refresh).
         if (evicted) {
-            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapSync', { detail: JSON.stringify(newMap) }));
+            window.dispatchEvent(new CustomEvent('Spiimask_MapSync', { detail: JSON.stringify(newMap) }));
         }
 
         // Persist (skip if the extension context was invalidated — e.g. after a reload with
@@ -126,7 +126,7 @@ window.addEventListener('ZeroTrustBouncer_MapUpdate', (e) => {
         }
         
         // Trigger pulse animation on the shield widget
-        const container = document.getElementById('zerotrust-bouncer-widget-container');
+        const container = document.getElementById('spiimask-widget-container');
         if (container && container.shadowRoot) {
             const btn = container.shadowRoot.querySelector('.shield-button');
             if (btn) {
@@ -244,10 +244,10 @@ const startObserver = () => {
 };
 
 function injectFloatingWidget(initialSettings) {
-    if (document.getElementById('zerotrust-bouncer-widget-container')) return;
+    if (document.getElementById('spiimask-widget-container')) return;
 
     const container = document.createElement('div');
-    container.id = 'zerotrust-bouncer-widget-container';
+    container.id = 'spiimask-widget-container';
     container.style.position = 'fixed';
     container.style.top = '90px';
     container.style.right = '20px';
@@ -379,7 +379,7 @@ function injectFloatingWidget(initialSettings) {
 
     const button = document.createElement('div');
     button.className = 'shield-button';
-    button.innerHTML = `${window.ZeroTrustBrand ? window.ZeroTrustBrand.widgetIconSvg : '<svg class="shield-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>'}<span class="shield-badge" id="zt-mask-badge"></span>`;
+    button.innerHTML = `${window.SpiimaskBrand ? window.SpiimaskBrand.widgetIconSvg : '<svg class="shield-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>'}<span class="shield-badge" id="zt-mask-badge"></span>`;
 
     const panel = document.createElement('div');
     panel.className = 'panel';
@@ -582,7 +582,7 @@ function injectFloatingWidget(initialSettings) {
 
     // Ensure it stays alive (SPA navigations can sometimes be aggressive)
     setInterval(() => {
-        if (!document.getElementById('zerotrust-bouncer-widget-container')) {
+        if (!document.getElementById('spiimask-widget-container')) {
             document.documentElement.appendChild(container);
         }
     }, 2000);
@@ -641,11 +641,11 @@ function injectFloatingWidget(initialSettings) {
     panel.querySelector('#btn-back-custom').addEventListener('click', () => showOnly(viewOptions));
 
     panel.querySelector('#btn-issue').addEventListener('click', () => {
-        window.open('mailto:mattiba@gmail.com?subject=ZeroTrust%20Bouncer%20Feedback');
+        window.open('mailto:mattiba@gmail.com?subject=Spiimask%20Bouncer%20Feedback');
     });
 
     panel.querySelector('#btn-info').addEventListener('click', () => {
-        window.open('https://github.com/mattib/zerotrust-bouncer', '_blank');
+        window.open('https://github.com/mattib/spiimask', '_blank');
     });
 
     // PII master keys list (all individual pii_* types, no api keys)
@@ -691,7 +691,7 @@ function injectFloatingWidget(initialSettings) {
                         const other = panel.querySelector('#' + otherId);
                         if (other && other !== tgl) other.checked = e.target.checked;
                     });
-                    console.log(`[ZeroTrust] Toggled ${id}: ${e.target.checked}`);
+                    console.log(`[Spiimask] Toggled ${id}: ${e.target.checked}`);
                 });
             }
         });
@@ -709,7 +709,7 @@ function injectFloatingWidget(initialSettings) {
                 const t = panel.querySelector('#tgl-' + k);
                 if (t) t.checked = checked;
             });
-            console.log(`[ZeroTrust] PII master → ${checked}`);
+            console.log(`[Spiimask] PII master → ${checked}`);
         });
     };
 
@@ -724,7 +724,7 @@ function injectFloatingWidget(initialSettings) {
 
     function saveCustomPatterns() {
         chrome.storage.local.set({ custom_patterns: customPatterns });
-        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_ConfigUpdate', {
+        window.dispatchEvent(new CustomEvent('Spiimask_ConfigUpdate', {
             detail: JSON.stringify({ custom_patterns: customPatterns })
         }));
     }
@@ -810,7 +810,7 @@ function injectFloatingWidget(initialSettings) {
         }
         if (evicted) {
             chrome.storage.local.set({ pii_map: piiMap, pii_map_order: currentMapOrder });
-            window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapSync', { detail: JSON.stringify(piiMap) }));
+            window.dispatchEvent(new CustomEvent('Spiimask_MapSync', { detail: JSON.stringify(piiMap) }));
         }
         _updateMapCount();
     });
@@ -830,7 +830,7 @@ function injectFloatingWidget(initialSettings) {
         piiMap = {};
         currentMapOrder = [];
         chrome.storage.local.set({ pii_map: {}, pii_map_order: [], pii_counters: {} });
-        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapClear', {}));
+        window.dispatchEvent(new CustomEvent('Spiimask_MapClear', {}));
         mapWarnBox.style.display = 'none';
         _updateMapCount();
     });

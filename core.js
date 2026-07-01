@@ -61,11 +61,11 @@ const API_KEY_DEFS = [
     { id: 'api_key_bearer',       label: 'Bearer token',           pattern: 'Bearer\\s+[a-zA-Z0-9._\\-]{20,}' },
 ];
 
-window.ZeroTrust = window.ZeroTrust || {
-    logPrefix: window.ZeroTrustBrand ? window.ZeroTrustBrand.logPrefix : "[ZeroTrust Bouncer]", // Default fallback
-    DEBUG: false, // OFF by default → quiet console. Set window.ZeroTrust.DEBUG = true to see intercept logs.
+window.Spiimask = window.Spiimask || {
+    logPrefix: window.SpiimaskBrand ? window.SpiimaskBrand.logPrefix : "[Spiimask]", // Default fallback
+    DEBUG: false, // OFF by default → quiet console. Set window.Spiimask.DEBUG = true to see intercept logs.
     log: function(...args) {
-        if (window.ZeroTrust.DEBUG) console.log(window.ZeroTrust.logPrefix, ...args);
+        if (window.Spiimask.DEBUG) console.log(window.Spiimask.logPrefix, ...args);
     },
     
     config: {
@@ -182,7 +182,7 @@ window.ZeroTrust = window.ZeroTrust || {
         { 
             type: "COMPANY_IL", 
             regex: /\b5\d{8}\b/g,
-            validate: function(match) { return window.ZeroTrust.validateIsraeliId(match); }
+            validate: function(match) { return window.Spiimask.validateIsraeliId(match); }
         },
 
         // Credit card — 13-19 digits, grouped or raw; Luhn-validated to kill false positives
@@ -191,7 +191,7 @@ window.ZeroTrust = window.ZeroTrust || {
             type: "CREDIT_CARD",
             regex: /\b\d{4}[ \-]\d{4}[ \-]\d{4}[ \-]\d{4}\b|\b\d{4}[ \-]\d{6}[ \-]\d{5}\b|\b\d{13,19}\b/g,
             validate: function(match) {
-                return window.ZeroTrust.luhn(match.replace(/[ \-]/g, ''));
+                return window.Spiimask.luhn(match.replace(/[ \-]/g, ''));
             }
         },
 
@@ -233,7 +233,7 @@ window.ZeroTrust = window.ZeroTrust || {
         {
             type: "ID",
             regex: /\b\d{9}\b/g,
-            validate: function(match) { return window.ZeroTrust.validateIsraeliId(match); }
+            validate: function(match) { return window.Spiimask.validateIsraeliId(match); }
         },
 
         // Israeli landline — AFTER ID so a valid ת"ז is typed [ID], not mislabeled [PHONE_IL_LANDLINE].
@@ -294,9 +294,9 @@ window.ZeroTrust = window.ZeroTrust || {
 
     // Fire the badge count once per send (summed across all maskText calls this send), then reset.
     flushMaskCount: function() {
-        const n = window.ZeroTrust._maskCountPending || 0;
-        window.ZeroTrust._maskCountPending = 0;
-        window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MaskedCount', { detail: String(n) }));
+        const n = window.Spiimask._maskCountPending || 0;
+        window.Spiimask._maskCountPending = 0;
+        window.dispatchEvent(new CustomEvent('Spiimask_MaskedCount', { detail: String(n) }));
     },
 
     // Generate a short random id (6 lowercase alphanumeric chars) for masking tokens.
@@ -310,7 +310,7 @@ window.ZeroTrust = window.ZeroTrust || {
     // Build a unique token like [TYPE_a3f9c2]; regenerates on the rare collision.
     _makeToken: function(typeBase) {
         let token;
-        do { token = `[${typeBase}_${window.ZeroTrust._shortId()}]`; } while (window.ZeroTrust.piiMap[token] !== undefined);
+        do { token = `[${typeBase}_${window.Spiimask._shortId()}]`; } while (window.Spiimask.piiMap[token] !== undefined);
         return token;
     },
 
@@ -319,28 +319,28 @@ window.ZeroTrust = window.ZeroTrust || {
         let modified = false;
         let maskedCount = 0;
 
-        for (const rule of window.ZeroTrust.PII_REGEXES) {
+        for (const rule of window.Spiimask.PII_REGEXES) {
             if (!rule.regex) continue; // Skip entries with null regex (e.g. API_KEY when all disabled)
             const configKey = `pii_${rule.type.toLowerCase()}`;
-            if (window.ZeroTrust.config[configKey] === false) continue; // Skip disabled PII types
+            if (window.Spiimask.config[configKey] === false) continue; // Skip disabled PII types
 
             newText = newText.replace(rule.regex, (match) => {
                 // Per-rule validation (e.g. Luhn for credit cards) — skip if fails
                 if (rule.validate && !rule.validate(match)) return match;
 
                 maskedCount++;
-                let existingToken = Object.keys(window.ZeroTrust.piiMap).find(key => window.ZeroTrust.piiMap[key] === match);
+                let existingToken = Object.keys(window.Spiimask.piiMap).find(key => window.Spiimask.piiMap[key] === match);
                 if (existingToken) return existingToken;
 
-                const token = window.ZeroTrust._makeToken(rule.type);
-                window.ZeroTrust.piiMap[token] = match;
+                const token = window.Spiimask._makeToken(rule.type);
+                window.Spiimask.piiMap[token] = match;
                 modified = true;
                 return token;
             });
         }
 
         // User-defined custom patterns
-        const customResult = window.ZeroTrust._runCustomPatterns(newText);
+        const customResult = window.Spiimask._runCustomPatterns(newText);
         newText = customResult.text;
         if (customResult.modified) modified = true;
         maskedCount += customResult.count || 0;
@@ -348,13 +348,13 @@ window.ZeroTrust = window.ZeroTrust || {
         if (modified) {
             // A listener throwing (e.g. an invalidated content-script context) must NEVER break masking.
             try {
-                window.dispatchEvent(new CustomEvent('ZeroTrustBouncer_MapUpdate', { detail: JSON.stringify(window.ZeroTrust.piiMap) }));
+                window.dispatchEvent(new CustomEvent('Spiimask_MapUpdate', { detail: JSON.stringify(window.Spiimask.piiMap) }));
             } catch (e) {}
         }
 
         // Accumulate into the per-send total; the network interceptor flushes it once per send
         // (so multi-part requests like Gemini's sum into one badge number instead of overwriting).
-        window.ZeroTrust._maskCountPending = (window.ZeroTrust._maskCountPending || 0) + maskedCount;
+        window.Spiimask._maskCountPending = (window.Spiimask._maskCountPending || 0) + maskedCount;
 
         return newText;
     },
@@ -362,7 +362,7 @@ window.ZeroTrust = window.ZeroTrust || {
     // Runs all enabled user-defined custom patterns against text.
     // Returns { text, modified } — caller handles the MapUpdate dispatch.
     _runCustomPatterns: function(text) {
-        const patterns = window.ZeroTrust.config.custom_patterns;
+        const patterns = window.Spiimask.config.custom_patterns;
         if (!Array.isArray(patterns) || !patterns.length) return { text, modified: false, count: 0 };
 
         let result = text;
@@ -379,10 +379,10 @@ window.ZeroTrust = window.ZeroTrust || {
 
             result = result.replace(regex, (match) => {
                 count++;
-                const existing = Object.keys(window.ZeroTrust.piiMap).find(k => window.ZeroTrust.piiMap[k] === match);
+                const existing = Object.keys(window.Spiimask.piiMap).find(k => window.Spiimask.piiMap[k] === match);
                 if (existing) return existing;
-                const token = window.ZeroTrust._makeToken(tokenBase);
-                window.ZeroTrust.piiMap[token] = match;
+                const token = window.Spiimask._makeToken(tokenBase);
+                window.Spiimask.piiMap[token] = match;
                 modified = true;
                 return token;
             });
@@ -394,7 +394,7 @@ window.ZeroTrust = window.ZeroTrust || {
     // Builds a combined regex from all currently-enabled API_KEY_DEFS entries.
     // Returns null if no entries are enabled.
     _buildApiKeyRegex: function() {
-        const enabled = API_KEY_DEFS.filter(d => window.ZeroTrust.config[d.id] !== false);
+        const enabled = API_KEY_DEFS.filter(d => window.Spiimask.config[d.id] !== false);
         if (!enabled.length) return null;
         return new RegExp('(?:' + enabled.map(d => d.pattern).join('|') + ')', 'g');
     },
@@ -403,29 +403,29 @@ window.ZeroTrust = window.ZeroTrust || {
     // Removes the entry entirely when the master toggle is off or no services enabled.
     _refreshApiKeyEntry: function() {
         // Master toggle check — if pii_api_key is false, remove the entry
-        if (window.ZeroTrust.config.pii_api_key === false) {
-            const idx = window.ZeroTrust.PII_REGEXES.findIndex(r => r.type === 'API_KEY');
-            if (idx >= 0) window.ZeroTrust.PII_REGEXES[idx].regex = null;
+        if (window.Spiimask.config.pii_api_key === false) {
+            const idx = window.Spiimask.PII_REGEXES.findIndex(r => r.type === 'API_KEY');
+            if (idx >= 0) window.Spiimask.PII_REGEXES[idx].regex = null;
             return;
         }
         let regex = null;
         try {
-            regex = window.ZeroTrust._buildApiKeyRegex();
+            regex = window.Spiimask._buildApiKeyRegex();
         } catch (e) {
-            window.ZeroTrust.log("Error building API_KEY regex:", e);
+            window.Spiimask.log("Error building API_KEY regex:", e);
         }
-        const idx = window.ZeroTrust.PII_REGEXES.findIndex(r => r.type === 'API_KEY');
+        const idx = window.Spiimask.PII_REGEXES.findIndex(r => r.type === 'API_KEY');
         if (regex && idx >= 0) {
-            window.ZeroTrust.PII_REGEXES[idx].regex = regex;
+            window.Spiimask.PII_REGEXES[idx].regex = regex;
         } else if (!regex && idx >= 0) {
-            window.ZeroTrust.PII_REGEXES[idx].regex = null;
+            window.Spiimask.PII_REGEXES[idx].regex = null;
         }
     },
 
     unmaskString: function(text) {
         let unmaskedText = text;
         if (typeof unmaskedText === 'string') {
-            for (const [token, realValue] of Object.entries(window.ZeroTrust.piiMap)) {
+            for (const [token, realValue] of Object.entries(window.Spiimask.piiMap)) {
                 if (unmaskedText.includes(token)) {
                     unmaskedText = unmaskedText.replaceAll(token, realValue);
                 }
@@ -436,58 +436,58 @@ window.ZeroTrust = window.ZeroTrust || {
 };
 
 // Build the initial API_KEY regex from the default config
-window.ZeroTrust._refreshApiKeyEntry();
+window.Spiimask._refreshApiKeyEntry();
 
-window.addEventListener('ZeroTrustBouncer_InitLogger', (e) => {
+window.addEventListener('Spiimask_InitLogger', (e) => {
     try {
         const data = JSON.parse(e.detail);
         if (data.prefix) {
-            window.ZeroTrust.logPrefix = data.prefix;
+            window.Spiimask.logPrefix = data.prefix;
         }
     } catch (err) {}
 });
 
 // Listen for live config updates from the options UI
-window.addEventListener('ZeroTrustBouncer_ConfigUpdate', (e) => {
+window.addEventListener('Spiimask_ConfigUpdate', (e) => {
     try {
         const updates = JSON.parse(e.detail);
-        Object.assign(window.ZeroTrust.config, updates);
-        window.ZeroTrust._refreshApiKeyEntry();
-        window.ZeroTrust.log("Engine Config Updated:", window.ZeroTrust.config);
+        Object.assign(window.Spiimask.config, updates);
+        window.Spiimask._refreshApiKeyEntry();
+        window.Spiimask.log("Engine Config Updated:", window.Spiimask.config);
     } catch (err) {}
 });
 
 // Restore persisted piiMap + piiCounters on page load
-window.addEventListener('ZeroTrustBouncer_MapRestore', (e) => {
+window.addEventListener('Spiimask_MapRestore', (e) => {
     try {
         const data = JSON.parse(e.detail);
-        if (data.piiMap)     Object.assign(window.ZeroTrust.piiMap, data.piiMap);
-        if (data.piiCounters) Object.assign(window.ZeroTrust.piiCounters, data.piiCounters);
-        window.ZeroTrust.log("Map restored:", Object.keys(window.ZeroTrust.piiMap).length, "entries");
+        if (data.piiMap)     Object.assign(window.Spiimask.piiMap, data.piiMap);
+        if (data.piiCounters) Object.assign(window.Spiimask.piiCounters, data.piiCounters);
+        window.Spiimask.log("Map restored:", Object.keys(window.Spiimask.piiMap).length, "entries");
     } catch (err) {}
 });
 
 // Clear the in-memory map (triggered by the Clear button in Settings)
-window.addEventListener('ZeroTrustBouncer_MapClear', () => {
-    window.ZeroTrust.piiMap     = {};
-    window.ZeroTrust.piiCounters = {};
-    window.ZeroTrust.log("Map cleared by user.");
+window.addEventListener('Spiimask_MapClear', () => {
+    window.Spiimask.piiMap     = {};
+    window.Spiimask.piiCounters = {};
+    window.Spiimask.log("Map cleared by user.");
 });
 
 // Replace the engine's map with an authoritative (trimmed) map from the content script —
 // keeps both copies in sync after FIFO eviction, with no page refresh needed.
-window.addEventListener('ZeroTrustBouncer_MapSync', (e) => {
+window.addEventListener('Spiimask_MapSync', (e) => {
     try {
-        window.ZeroTrust.piiMap = JSON.parse(e.detail);
-        window.ZeroTrust.log("Map synced (trimmed):", Object.keys(window.ZeroTrust.piiMap).length, "entries");
+        window.Spiimask.piiMap = JSON.parse(e.detail);
+        window.Spiimask.log("Map synced (trimmed):", Object.keys(window.Spiimask.piiMap).length, "entries");
     } catch (err) {}
 });
 
 if (navigator.clipboard && navigator.clipboard.writeText) {
     const originalWriteText = navigator.clipboard.writeText;
     navigator.clipboard.writeText = async function(text) {
-        const unmaskedText = window.ZeroTrust.unmaskString(text);
-        window.ZeroTrust.log("Unmasked text for clipboard.writeText!");
+        const unmaskedText = window.Spiimask.unmaskString(text);
+        window.Spiimask.log("Unmasked text for clipboard.writeText!");
         return Reflect.apply(originalWriteText, navigator.clipboard, [unmaskedText]);
     };
 }
@@ -504,7 +504,7 @@ if (navigator.clipboard && navigator.clipboard.write) {
                         try {
                             let blob = await item.getType(type);
                             let text = await blob.text();
-                            let unmaskedText = window.ZeroTrust.unmaskString(text);
+                            let unmaskedText = window.Spiimask.unmaskString(text);
                             newBlobs[type] = new Blob([unmaskedText], { type: type });
                         } catch (e) {
                             newBlobs[type] = await item.getType(type);
@@ -515,7 +515,7 @@ if (navigator.clipboard && navigator.clipboard.write) {
                 }
                 newItems.push(new ClipboardItem(newBlobs));
             }
-            window.ZeroTrust.log("Unmasked text for clipboard.write!");
+            window.Spiimask.log("Unmasked text for clipboard.write!");
             return Reflect.apply(originalWrite, navigator.clipboard, [newItems]);
         }
         return Reflect.apply(originalWrite, navigator.clipboard, [data]);
@@ -528,11 +528,11 @@ document.execCommand = function(command, showUI, value) {
         const activeElement = document.activeElement;
         if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
             const originalValue = activeElement.value;
-            const unmaskedValue = window.ZeroTrust.unmaskString(originalValue);
+            const unmaskedValue = window.Spiimask.unmaskString(originalValue);
             if (unmaskedValue !== originalValue) {
                 activeElement.value = unmaskedValue;
                 activeElement.select();
-                window.ZeroTrust.log("Unmasked text for execCommand('copy')!");
+                window.Spiimask.log("Unmasked text for execCommand('copy')!");
                 const result = Reflect.apply(originalExecCommand, this, [command, showUI, value]);
                 activeElement.value = originalValue;
                 activeElement.select();
@@ -548,9 +548,9 @@ document.addEventListener('copy', (e) => {
     const originalSetData = e.clipboardData.setData;
     e.clipboardData.setData = function(format, data) {
         if (format === 'text/plain') {
-            const unmaskedData = window.ZeroTrust.unmaskString(data);
+            const unmaskedData = window.Spiimask.unmaskString(data);
             if (unmaskedData !== data) {
-                window.ZeroTrust.log("Unmasked text for clipboardData.setData!");
+                window.Spiimask.log("Unmasked text for clipboardData.setData!");
             }
             return Reflect.apply(originalSetData, this, [format, unmaskedData]);
         }

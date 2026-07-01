@@ -1,11 +1,11 @@
-window.ZeroTrust = window.ZeroTrust || {};
-window.ZeroTrust.providers = window.ZeroTrust.providers || [];
+window.Spiimask = window.Spiimask || {};
+window.Spiimask.providers = window.Spiimask.providers || [];
 
-window.ZeroTrust.providers.push({
+window.Spiimask.providers.push({
     name: "ChatGPT",
     shouldIntercept: (url) => url.includes('conversation'),
     processPayload: (body) => {
         if (typeof body !== 'string') return body;
-        return window.ZeroTrust.maskText(body);
+        return window.Spiimask.maskText(body);
     }
 });

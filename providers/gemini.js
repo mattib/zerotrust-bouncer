@@ -1,7 +1,7 @@
-window.ZeroTrust = window.ZeroTrust || {};
-window.ZeroTrust.providers = window.ZeroTrust.providers || [];
+window.Spiimask = window.Spiimask || {};
+window.Spiimask.providers = window.Spiimask.providers || [];
 
-window.ZeroTrust.providers.push({
+window.Spiimask.providers.push({
     name: "Gemini",
     shouldIntercept: (url) => url.includes('batchexecute') || url.includes('StreamGenerate'),
     processPayload: (body) => {
@@ -12,7 +12,7 @@ window.ZeroTrust.providers.push({
                 const urlParams = new URLSearchParams(body);
                 let modified = false;
                 for (const [key, value] of urlParams.entries()) {
-                    const maskedValue = window.ZeroTrust.maskText(value);
+                    const maskedValue = window.Spiimask.maskText(value);
                     if (maskedValue !== value) {
                         urlParams.set(key, maskedValue);
                         modified = true;
@@ -23,10 +23,10 @@ window.ZeroTrust.providers.push({
                 }
                 return body;
             } catch (e) {
-                console.error(window.ZeroTrust.logPrefix || "[ZeroTrust Bouncer]", "URL decode failed", e);
+                console.error(window.Spiimask.logPrefix || "[Spiimask]", "URL decode failed", e);
             }
         }
         
-        return window.ZeroTrust.maskText(body);
+        return window.Spiimask.maskText(body);
     }
 });
