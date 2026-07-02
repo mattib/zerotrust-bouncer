@@ -167,6 +167,11 @@ window.Spiimask = window.Spiimask || {
         // Israeli health-fund (קופת חולים) member number — MEDICAL PII. Keyword-gated so a bare
         // 8-9 digit number never matches; only digits following a health-fund keyword.
         { type: "HEALTH_FUND", regex: /(?<=(?:מספר חבר|קופת חולים|קופ["״]?ח)[^\d\n]{0,30})\d{8,9}(?!\d)/g },
+        // Israeli bank account — keyword-gated (חשבון / account). Value is digits+hyphens only
+        // (no spaces/quotes) so it can never eat across the JSON payload. Covers 12-345-678901 + raw.
+        { type: "BANK_ACCOUNT", regex: /(?<=(?:מספר\s*חשבון|חשבון|account(?:\s*(?:number|no\.?|#))?)[^\d\n"]{0,12})\d[\d-]{4,16}\d/gu },
+        // Date of birth — keyword-gated (bare dates never match; only after a DOB keyword).
+        { type: "DOB", regex: /(?<=(?:תאריך\s*לידה|ת\.?\s*לידה|date\s*of\s*birth|DOB|born(?:\s*on)?|נולדה?|נולדתי)[^\d\n"]{0,10})\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}/gu },
 
         // --- Secrets / payment (keyword-gated: the value alone has no safe format to match) ---
         // Password — only the value right after a password label (no label → never matched).
@@ -261,7 +266,7 @@ window.Spiimask = window.Spiimask || {
         { type: "PLATE_IL", regex: /\b(?:\d{2}-\d{3}-\d{2}|\d{3}-\d{2}-\d{3})\b/g }
     ],
     piiMap: {},
-    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IBAN: 0, SWIFT_BIC: 0, ETH_WALLET: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0 },
+    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IBAN: 0, SWIFT_BIC: 0, ETH_WALLET: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0, BANK_ACCOUNT: 0, DOB: 0 },
     providers: [],
 
     // Luhn checksum — strips spaces/dashes, validates credit card digits

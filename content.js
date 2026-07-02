@@ -20,6 +20,8 @@ const defaultSettings = {
     pii_ipv4: true, pii_ipv6: true, pii_mac: true, pii_url_creds: true,
     // Previously always-on with no toggle — now user-controllable (default ON)
     pii_health_fund: true, pii_password: true, pii_cvv: true, pii_card_expiry: true, pii_btc_wallet: true,
+    // Israeli bank account + date of birth (keyword-gated)
+    pii_bank_account: true, pii_dob: true,
     // Custom user-defined patterns
     custom_patterns: [],
     // Custom user-defined masks (slot 0 = address, slots 1-4 = terms) — MUST be here or get() won't return it on refresh
@@ -527,6 +529,8 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">Company Reg. (ח"פ)</span><label class="switch"><input type="checkbox" id="tgl-pii_company_il" ${initialSettings.pii_company_il ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">VAT / עוסק מורשה</span><label class="switch"><input type="checkbox" id="tgl-pii_vat_il" ${initialSettings.pii_vat_il ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Health Fund (קופת חולים)</span><label class="switch"><input type="checkbox" id="tgl-pii_health_fund" ${initialSettings.pii_health_fund ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Israeli Bank Account</span><label class="switch"><input type="checkbox" id="tgl-pii_bank_account" ${initialSettings.pii_bank_account ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Date of Birth</span><label class="switch"><input type="checkbox" id="tgl-pii_dob" ${initialSettings.pii_dob ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">US SSN</span><label class="switch"><input type="checkbox" id="tgl-pii_ssn_us" ${initialSettings.pii_ssn_us ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">UK NI Number</span><label class="switch"><input type="checkbox" id="tgl-pii_ni_uk" ${initialSettings.pii_ni_uk ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">IL Vehicle Plate</span><label class="switch"><input type="checkbox" id="tgl-pii_plate_il" ${initialSettings.pii_plate_il ? 'checked' : ''}><span class="slider"></span></label></div>
@@ -724,7 +728,8 @@ function injectFloatingWidget(initialSettings) {
         'pii_passport_il', 'pii_company_il', 'pii_vat_il', 'pii_ssn_us', 'pii_ni_uk',
         'pii_plate_il', 'pii_credit_card', 'pii_iban', 'pii_swift_bic', 'pii_eth_wallet',
         'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds',
-        'pii_health_fund', 'pii_password', 'pii_cvv', 'pii_card_expiry', 'pii_btc_wallet'
+        'pii_health_fund', 'pii_password', 'pii_cvv', 'pii_card_expiry', 'pii_btc_wallet',
+        'pii_bank_account', 'pii_dob'
     ];
 
     // Toggle Listeners — standard per-key toggles
