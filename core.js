@@ -170,7 +170,7 @@ window.Spiimask = window.Spiimask || {
 
         // --- Secrets / payment (keyword-gated: the value alone has no safe format to match) ---
         // Password — only the value right after a password label (no label → never matched).
-        { type: "PASSWORD", regex: /(?<=(?:[Pp]assword|passwd|PWD|pwd|סיסמה|סיסמא)\s*[:=]\s*)\S{4,}/g },
+        { type: "PASSWORD", regex: /(?<=(?:[Pp]assword|passwd|PWD|pwd|סיסמה|סיסמא)\s*[:=]\s*)[^\s"]{4,}/g },
         // CVV / CVC — 3-4 digits, only after the CVV label (bare 3-4 digits never match).
         { type: "CVV", regex: /(?<=(?:CVV|CVC|cvv|cvc)\s*[:=]?\s*)\d{3,4}\b/g },
         // Card expiry MM/YY(YY) — keyword-gated + month 01-12 (so a DOB like 15/07/1985 never matches).
