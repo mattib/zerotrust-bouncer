@@ -2,7 +2,7 @@ const manifest = chrome.runtime.getManifest();
 const ztPrefix = `[${manifest.name} v${manifest.version}]`;
 const ztLog = (...args) => console.log(ztPrefix, ...args);
 
-ztLog("Engine Started. Built by Matti B.");
+ztLog("Spiimask engine started.");
 
 window.dispatchEvent(new CustomEvent('Spiimask_InitLogger', { 
     detail: JSON.stringify({ prefix: ztPrefix }) 

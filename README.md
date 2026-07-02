@@ -2,12 +2,10 @@
 
 A local-first privacy extension that runs entirely in your browser. It intercepts and masks Personally Identifiable Information (PII) **before it ever leaves your machine**, so AI providers (ChatGPT, Claude, Gemini) only ever receive anonymized tokens — never your real data.
 
-**Built by Matti B.**
-
 ## How it works
 The moment your browser tries to send a prompt to the AI server, Spiimask steps in and swaps your sensitive data for anonymous, typed tokens:
 
-> `matti@gmail.com` → `[EMAIL_a3f9c2]`
+> `jane.doe@example.com` → `[EMAIL_a3f9c2]`
 
 The AI processes the request using only those tokens. When it responds, the extension **unmasks** the tokens back to your real values, right on your screen. Each token keeps its *type* (`[EMAIL_…]`, `[ID_…]`, `[PASSWORD_…]`) so the AI still understands the meaning of your text — it just never sees the actual values.
 
@@ -44,9 +42,6 @@ No backend. No telemetry. No tracking. Everything happens **100% locally**, in y
 
 ## Current limitation
 Spiimask masks **structured and labeled** data. It does **not yet** detect free-text **personal names** or **street addresses** — those require a Hebrew-aware NER model (on the roadmap). Treat it as strong protection for structured/sensitive data, not a replacement for reviewing free prose.
-
-## Testing
-The masking engine (`core.js`) is covered by a dedicated test harness — dependency-free unit tests over **every** PII type (positive, negative, and edge/regression cases) plus Playwright E2E that loads the extension and asserts outgoing payloads are masked and the token map never leaks to page scope.
 
 ## Install (unpacked)
 1. Go to `chrome://extensions`
