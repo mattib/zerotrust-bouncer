@@ -21,7 +21,7 @@ const defaultSettings = {
     // Previously always-on with no toggle — now user-controllable (default ON)
     pii_health_fund: true, pii_password: true, pii_cvv: true, pii_card_expiry: true, pii_btc_wallet: true,
     // Israeli bank account + dates (keyword-gated: DOB = birth; date = issue/expiry/hire/medical/contract)
-    pii_bank_account: true, pii_dob: true, pii_date: true,
+    pii_bank_account: true, pii_dob: true, pii_date: true, pii_drivers_license: true,
     // Custom user-defined patterns
     custom_patterns: [],
     // Custom user-defined masks (slot 0 = address, slots 1-4 = terms) — MUST be here or get() won't return it on refresh
@@ -535,6 +535,7 @@ function injectFloatingWidget(initialSettings) {
                 <div class="toggle-row"><span class="toggle-label">US SSN</span><label class="switch"><input type="checkbox" id="tgl-pii_ssn_us" ${initialSettings.pii_ssn_us ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">UK NI Number</span><label class="switch"><input type="checkbox" id="tgl-pii_ni_uk" ${initialSettings.pii_ni_uk ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">IL Vehicle Plate</span><label class="switch"><input type="checkbox" id="tgl-pii_plate_il" ${initialSettings.pii_plate_il ? 'checked' : ''}><span class="slider"></span></label></div>
+                <div class="toggle-row"><span class="toggle-label">Driver's License</span><label class="switch"><input type="checkbox" id="tgl-pii_drivers_license" ${initialSettings.pii_drivers_license ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Credit Card</span><label class="switch"><input type="checkbox" id="tgl-pii_credit_card" ${initialSettings.pii_credit_card ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Card CVV</span><label class="switch"><input type="checkbox" id="tgl-pii_cvv" ${initialSettings.pii_cvv ? 'checked' : ''}><span class="slider"></span></label></div>
                 <div class="toggle-row"><span class="toggle-label">Card Expiry</span><label class="switch"><input type="checkbox" id="tgl-pii_card_expiry" ${initialSettings.pii_card_expiry ? 'checked' : ''}><span class="slider"></span></label></div>
@@ -730,7 +731,7 @@ function injectFloatingWidget(initialSettings) {
         'pii_plate_il', 'pii_credit_card', 'pii_iban', 'pii_swift_bic', 'pii_eth_wallet',
         'pii_ipv4', 'pii_ipv6', 'pii_mac', 'pii_url_creds',
         'pii_health_fund', 'pii_password', 'pii_cvv', 'pii_card_expiry', 'pii_btc_wallet',
-        'pii_bank_account', 'pii_dob', 'pii_date'
+        'pii_bank_account', 'pii_dob', 'pii_date', 'pii_drivers_license'
     ];
 
     // Toggle Listeners — standard per-key toggles
