@@ -46,13 +46,7 @@ No backend. No telemetry. No tracking. Everything happens **100% locally**, in y
 Spiimask masks **structured and labeled** data. It does **not yet** detect free-text **personal names** or **street addresses** — those require a Hebrew-aware NER model (on the roadmap). Treat it as strong protection for structured/sensitive data, not a replacement for reviewing free prose.
 
 ## Testing
-A full masking test suite runs the real engine and checks **every** PII type — positive (must mask), negative (must **not** mask), and edge/regression cases for every bug we've fixed — plus JSON-payload safety:
-
-```
-node test/masking.test.js
-```
-
-56 assertions; exits non-zero on any failure. Add a case here whenever a new pattern or bug fix lands.
+The masking engine (`core.js`) is covered by a dedicated test harness — dependency-free unit tests over **every** PII type (positive, negative, and edge/regression cases) plus Playwright E2E that loads the extension and asserts outgoing payloads are masked and the token map never leaks to page scope.
 
 ## Install (unpacked)
 1. Go to `chrome://extensions`
