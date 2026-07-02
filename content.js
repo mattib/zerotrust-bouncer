@@ -20,6 +20,8 @@ const defaultSettings = {
     pii_ipv4: true, pii_ipv6: true, pii_mac: true, pii_url_creds: true,
     // Custom user-defined patterns
     custom_patterns: [],
+    // Custom user-defined masks (slot 0 = address, slots 1-4 = terms) — MUST be here or get() won't return it on refresh
+    custom_masks: ["", "", "", "", ""],
     // API Keys — master toggle + per-service
     pii_api_key: true,
     api_key_anthropic: true, api_key_openai: true, api_key_aws: true,

@@ -191,7 +191,7 @@ window.Spiimask = window.Spiimask || {
             type: "CREDIT_CARD",
             regex: /\b\d{4}[ \-]\d{4}[ \-]\d{4}[ \-]\d{4}\b|\b\d{4}[ \-]\d{6}[ \-]\d{5}\b|\b\d{13,19}\b/g,
             validate: function(match) {
-                return window.Spiimask.luhn(match.replace(/[ \-]/g, ''));
+                return window.Spiimask.isCreditCardNumber(match);
             }
         },
 
@@ -275,6 +275,28 @@ window.Spiimask = window.Spiimask || {
             alt = !alt;
         }
         return sum % 10 === 0;
+    },
+
+    // Credit-card gate: require a real card-network IIN prefix + valid length, THEN Luhn.
+    // Luhn alone passes ~1 in 10 random numbers (e.g. a 16-digit page id starting 1782),
+    // which is why a non-card number was being masked. The prefix+length gate kills that.
+    isCreditCardNumber: function(raw) {
+        const d = String(raw).replace(/[^0-9]/g, '');
+        const len = d.length;
+        if (len < 13 || len > 19) return false;
+        const networks = [
+            { re: /^4/,                                       lens: [13, 16, 19] },        // Visa
+            { re: /^5[1-5]/,                                  lens: [16] },                // Mastercard
+            { re: /^(222[1-9]|22[3-9]\d|2[3-6]\d\d|27[01]\d|2720)/, lens: [16] },          // Mastercard 2-series
+            { re: /^3[47]/,                                   lens: [15] },                // Amex
+            { re: /^(30[0-5]|3095|36|3[89])/,                 lens: [14, 16, 17, 18, 19] },// Diners
+            { re: /^(6011|64[4-9]|65)/,                       lens: [16, 17, 18, 19] },    // Discover
+            { re: /^35(2[89]|[3-8]\d)/,                       lens: [16, 17, 18, 19] },    // JCB
+            { re: /^62/,                                      lens: [16, 17, 18, 19] }     // UnionPay
+        ];
+        const ok = networks.some(n => n.re.test(d) && n.lens.includes(len));
+        if (!ok) return false;
+        return window.Spiimask.luhn(d);
     },
 
     // Israeli Teudat Zehut / Company Registration checksum
