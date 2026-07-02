@@ -172,6 +172,9 @@ window.Spiimask = window.Spiimask || {
         { type: "BANK_ACCOUNT", regex: /(?<=(?:מספר\s*חשבון|חשבון|account(?:\s*(?:number|no\.?|#))?)[^\d\n"]{0,12})\d[\d-]{4,16}\d/gu },
         // Date of birth — keyword-gated (bare dates never match; only after a DOB keyword).
         { type: "DOB", regex: /(?<=(?:תאריך\s*לידה|ת\.?\s*לידה|date\s*of\s*birth|DOB|born(?:\s*on)?|נולדה?|נולדתי)[^\d\n"]{0,10})\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}/gu },
+        // Sensitive dates in NON-birth contexts (issue/expiry/hire/hospitalized/contract...). Keyword-gated:
+        // an innocent date ("let's meet 03/15") is never masked — only a date next to a sensitive keyword.
+        { type: "DATE", regex: /(?<=(?:issue[d]?(?:\s*date)?|date\s*of\s*issue|valid\s*(?:until|through|thru)|expir\w*|hire[d]?(?:\s*date)?|start\s*date|termination|effective(?:\s*date)?|contract\s*date|hospitali[sz]ed|admitted|discharge[d]?|surgery|תאריך\s*הנפקה|הונפק|בתוקף\s*עד|תחילת\s*עבודה|קליטה|פיטורי[ןם]|אשפוז|ניתוח|שחרור|תאריך\s*חוזה)[^\d\n"]{0,12})\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}/gu },
 
         // --- Secrets / payment (keyword-gated: the value alone has no safe format to match) ---
         // Password — only the value right after a password label (no label → never matched).
@@ -266,7 +269,7 @@ window.Spiimask = window.Spiimask || {
         { type: "PLATE_IL", regex: /\b(?:\d{2}-\d{3}-\d{2}|\d{3}-\d{2}-\d{3})\b/g }
     ],
     piiMap: {},
-    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IBAN: 0, SWIFT_BIC: 0, ETH_WALLET: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0, BANK_ACCOUNT: 0, DOB: 0 },
+    piiCounters: { EMAIL: 0, PHONE: 0, ID: 0, PHONE_IL_LANDLINE: 0, PHONE_INTL: 0, PASSPORT_IL: 0, COMPANY_IL: 0, VAT_IL: 0, SSN_US: 0, NI_UK: 0, IBAN: 0, SWIFT_BIC: 0, ETH_WALLET: 0, IPV4: 0, IPV6: 0, MAC: 0, API_KEY: 0, PLATE_IL: 0, URL_CREDS: 0, CREDIT_CARD: 0, BANK_ACCOUNT: 0, DOB: 0, DATE: 0 },
     providers: [],
 
     // Luhn checksum — strips spaces/dashes, validates credit card digits
